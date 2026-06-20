@@ -37,9 +37,9 @@ function AuthPage() {
 
   useEffect(() => {
     if (!loading && user) {
-      throw redirect({ to: "/dashboard" });
+      navigate({ to: "/dashboard", replace: true });
     }
-  }, [user, loading]);
+  }, [user, loading, navigate]);
 
   return (
     <div className="relative flex min-h-screen items-center justify-center bg-hero px-4 py-10">
