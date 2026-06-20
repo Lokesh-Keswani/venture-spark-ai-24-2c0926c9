@@ -93,7 +93,8 @@ Return ONLY a valid JSON object with this exact shape:
       .insert({
         project_id: data.projectId,
         user_id: context.userId,
-        analysis_json: analysis as unknown as Record<string, unknown>,
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        analysis_json: analysis as any,
         score,
         summary: analysis.summary ?? "",
       })
