@@ -14,7 +14,110 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      profiles: {
+        Row: {
+          avatar_url: string | null
+          bio: string | null
+          created_at: string
+          email: string | null
+          full_name: string | null
+          id: string
+          updated_at: string
+        }
+        Insert: {
+          avatar_url?: string | null
+          bio?: string | null
+          created_at?: string
+          email?: string | null
+          full_name?: string | null
+          id: string
+          updated_at?: string
+        }
+        Update: {
+          avatar_url?: string | null
+          bio?: string | null
+          created_at?: string
+          email?: string | null
+          full_name?: string | null
+          id?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      startup_projects: {
+        Row: {
+          business_model: string | null
+          created_at: string
+          id: string
+          industry: string | null
+          startup_idea: string
+          startup_name: string
+          target_audience: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          business_model?: string | null
+          created_at?: string
+          id?: string
+          industry?: string | null
+          startup_idea: string
+          startup_name: string
+          target_audience?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          business_model?: string | null
+          created_at?: string
+          id?: string
+          industry?: string | null
+          startup_idea?: string
+          startup_name?: string
+          target_audience?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      startup_reports: {
+        Row: {
+          analysis_json: Json
+          created_at: string
+          id: string
+          project_id: string
+          score: number | null
+          summary: string | null
+          user_id: string
+        }
+        Insert: {
+          analysis_json: Json
+          created_at?: string
+          id?: string
+          project_id: string
+          score?: number | null
+          summary?: string | null
+          user_id: string
+        }
+        Update: {
+          analysis_json?: Json
+          created_at?: string
+          id?: string
+          project_id?: string
+          score?: number | null
+          summary?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "startup_reports_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "startup_projects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
