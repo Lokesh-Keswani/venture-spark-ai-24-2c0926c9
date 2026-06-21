@@ -136,7 +136,7 @@ function Dashboard() {
           )}
         </section>
 
-        <section className="rounded-xl border border-border bg-card p-5 shadow-soft">
+        <section className="min-w-0 rounded-xl border border-border bg-card p-5 shadow-soft">
           <h2 className="mb-4 font-display text-lg font-semibold">Score overview</h2>
           {reports.length === 0 ? (
             <p className="text-sm text-muted-foreground">No analyses yet.</p>
