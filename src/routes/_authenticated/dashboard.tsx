@@ -49,7 +49,7 @@ function Dashboard() {
       : Math.round(reports.reduce((s, r) => s + (r.score ?? 0), 0) / reports.length);
 
   return (
-    <div className="mx-auto max-w-6xl px-4 py-8 sm:px-6 lg:py-10">
+    <div className="mx-auto w-full min-w-0 max-w-6xl px-4 py-8 sm:px-6 lg:py-10">
       <div className="flex flex-wrap items-end justify-between gap-3">
         <div>
           <h1 className="font-display text-2xl font-semibold tracking-tight sm:text-3xl">
