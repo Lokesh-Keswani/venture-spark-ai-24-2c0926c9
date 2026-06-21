@@ -54,7 +54,7 @@ export function AppShell({ children }: { children: ReactNode }) {
           <div className="hidden md:block" />
           <HeaderRight />
         </header>
-        <main className="min-w-0 flex-1">{children}</main>
+        <main className="min-w-0 flex-1 overflow-x-hidden">{children}</main>
       </div>
     </div>
   );
