@@ -49,24 +49,24 @@ function Dashboard() {
       : Math.round(reports.reduce((s, r) => s + (r.score ?? 0), 0) / reports.length);
 
   return (
-    <div className="mx-auto w-full min-w-0 max-w-6xl px-4 py-8 sm:px-6 lg:py-10">
-      <div className="flex flex-wrap items-end justify-between gap-3">
-        <div>
-          <h1 className="font-display text-2xl font-semibold tracking-tight sm:text-3xl">
+    <div className="mx-auto box-border w-full min-w-0 max-w-6xl overflow-hidden px-3 py-6 sm:px-6 sm:py-8 lg:py-10">
+      <div className="grid min-w-0 grid-cols-[minmax(0,1fr)] gap-3 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-end">
+        <div className="min-w-0">
+          <h1 className="truncate font-display text-2xl font-semibold tracking-tight sm:text-3xl">
             Hi, {name.toString().split(" ")[0]}
           </h1>
-          <p className="mt-1 text-sm text-muted-foreground">
+          <p className="mt-1 truncate text-sm text-muted-foreground">
             Here's what's happening across your ventures.
           </p>
         </div>
-        <Button asChild className="shadow-glow">
+        <Button asChild className="w-full shadow-glow sm:w-auto">
           <Link to="/projects/new">
             <Sparkles className="mr-1.5 h-4 w-4" /> New analysis
           </Link>
         </Button>
       </div>
 
-      <div className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+      <div className="mt-6 grid min-w-0 grid-cols-[minmax(0,1fr)] gap-4 sm:mt-8 sm:grid-cols-2 lg:grid-cols-4">
         <Stat
           icon={FolderKanban}
           label="Total projects"
@@ -99,10 +99,10 @@ function Dashboard() {
         />
       </div>
 
-      <div className="mt-8 grid gap-6 lg:grid-cols-3">
-        <section className="min-w-0 rounded-xl border border-border bg-card p-5 shadow-soft lg:col-span-2">
-          <div className="mb-4 flex items-center justify-between">
-            <h2 className="font-display text-lg font-semibold">Recent activity</h2>
+      <div className="mt-6 grid min-w-0 grid-cols-[minmax(0,1fr)] gap-5 sm:mt-8 lg:grid-cols-3 lg:gap-6">
+        <section className="w-full min-w-0 max-w-full overflow-hidden rounded-xl border border-border bg-card p-4 shadow-soft sm:p-5 lg:col-span-2">
+          <div className="mb-4 grid min-w-0 grid-cols-[minmax(0,1fr)_auto] items-center gap-3">
+            <h2 className="truncate font-display text-lg font-semibold">Recent activity</h2>
             <Link to="/projects" className="text-xs text-muted-foreground hover:text-foreground">
               View all
             </Link>
@@ -110,11 +110,11 @@ function Dashboard() {
           {reports.length === 0 ? (
             <EmptyState />
           ) : (
-            <ul className="divide-y divide-border">
+            <ul className="min-w-0 divide-y divide-border">
               {reports.slice(0, 6).map((r) => {
                 const proj = projects.find((p) => p.id === r.project_id);
                 return (
-                  <li key={r.id} className="flex items-center gap-3 py-3">
+                  <li key={r.id} className="grid min-w-0 grid-cols-[auto_minmax(0,1fr)] items-center gap-3 py-3 sm:grid-cols-[auto_minmax(0,1fr)_auto]">
                     <ScorePill score={r.score ?? 0} />
                     <div className="min-w-0 flex-1">
                       <Link
@@ -136,8 +136,8 @@ function Dashboard() {
           )}
         </section>
 
-        <section className="min-w-0 rounded-xl border border-border bg-card p-5 shadow-soft">
-          <h2 className="mb-4 font-display text-lg font-semibold">Score overview</h2>
+        <section className="w-full min-w-0 max-w-full overflow-hidden rounded-xl border border-border bg-card p-4 shadow-soft sm:p-5">
+          <h2 className="mb-4 truncate font-display text-lg font-semibold">Score overview</h2>
           {reports.length === 0 ? (
             <p className="text-sm text-muted-foreground">No analyses yet.</p>
           ) : (
@@ -148,10 +148,10 @@ function Dashboard() {
                 </span>
                 <span className="text-sm text-muted-foreground">/ 100 avg</span>
               </div>
-              <div className="mt-4 space-y-2">
+              <div className="mt-4 min-w-0 space-y-2">
                 {reports.slice(0, 5).map((r) => (
-                  <div key={r.id} className="flex items-center gap-3">
-                    <div className="h-1.5 flex-1 overflow-hidden rounded-full bg-muted">
+                  <div key={r.id} className="grid min-w-0 grid-cols-[minmax(0,1fr)_2.25rem] items-center gap-3">
+                    <div className="h-1.5 min-w-0 overflow-hidden rounded-full bg-muted">
                       <div
                         className="h-full rounded-full bg-primary"
                         style={{ width: `${r.score ?? 0}%` }}
@@ -168,10 +168,10 @@ function Dashboard() {
         </section>
       </div>
 
-      <section className="mt-6 rounded-xl border border-border bg-card p-5 shadow-soft">
-        <div className="mb-4 flex items-center justify-between">
-          <h2 className="font-display text-lg font-semibold">Saved analyses</h2>
-          <Button asChild size="sm" variant="ghost">
+      <section className="mt-5 w-full min-w-0 max-w-full overflow-hidden rounded-xl border border-border bg-card p-4 shadow-soft sm:mt-6 sm:p-5">
+        <div className="mb-4 grid min-w-0 grid-cols-[minmax(0,1fr)_auto] items-center gap-3">
+          <h2 className="truncate font-display text-lg font-semibold">Saved analyses</h2>
+          <Button asChild size="sm" variant="ghost" className="shrink-0">
             <Link to="/projects">
               Open all <ArrowRight className="ml-1 h-3.5 w-3.5" />
             </Link>
@@ -180,7 +180,7 @@ function Dashboard() {
         {projects.length === 0 ? (
           <EmptyState />
         ) : (
-          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+          <div className="grid min-w-0 grid-cols-[minmax(0,1fr)] gap-3 sm:grid-cols-2 lg:grid-cols-3">
             {projects.slice(0, 6).map((p) => {
               const r = reports.find((x) => x.project_id === p.id);
               return (
@@ -188,9 +188,9 @@ function Dashboard() {
                   key={p.id}
                   to="/projects/$id"
                   params={{ id: p.id }}
-                  className="group rounded-lg border border-border bg-background p-4 transition hover:border-primary/40 hover:shadow-soft"
+                  className="group min-w-0 overflow-hidden rounded-lg border border-border bg-background p-4 transition hover:border-primary/40 hover:shadow-soft"
                 >
-                  <div className="flex items-start justify-between">
+                  <div className="grid min-w-0 grid-cols-[minmax(0,1fr)_auto] items-start gap-2">
                     <h3 className="truncate font-medium">{p.startup_name}</h3>
                     {r && <ScorePill score={r.score ?? 0} small />}
                   </div>
@@ -217,12 +217,12 @@ function Stat({
   value: string;
 }) {
   return (
-    <div className="rounded-xl border border-border bg-card p-4 shadow-soft">
-      <div className="flex items-center gap-2 text-muted-foreground">
-        <Icon className="h-4 w-4" />
-        <span className="text-xs">{label}</span>
+    <div className="w-full min-w-0 max-w-full overflow-hidden rounded-xl border border-border bg-card p-4 shadow-soft">
+      <div className="flex min-w-0 items-center gap-2 text-muted-foreground">
+        <Icon className="h-4 w-4 shrink-0" />
+        <span className="truncate text-xs">{label}</span>
       </div>
-      <div className="mt-2 font-display text-2xl font-semibold tracking-tight">{value}</div>
+      <div className="mt-2 truncate font-display text-2xl font-semibold tracking-tight">{value}</div>
     </div>
   );
 }
@@ -237,7 +237,7 @@ function ScorePill({ score, small }: { score: number; small?: boolean }) {
   return (
     <span
       className={[
-        "inline-flex items-center justify-center rounded-md font-semibold tabular-nums",
+        "inline-flex shrink-0 items-center justify-center rounded-md font-semibold tabular-nums",
         small ? "h-5 px-1.5 text-[10px]" : "h-7 w-10 text-xs",
         tone,
       ].join(" ")}
