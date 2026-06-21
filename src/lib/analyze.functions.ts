@@ -11,18 +11,51 @@ const InputSchema = z.object({
   business_model: z.string().max(400).optional().nullable(),
 });
 
-type AnalysisJson = {
+export type Competitor = {
+  name: string;
+  type: "direct" | "indirect";
+  description: string;
+  strength: string;
+  weakness: string;
+};
+
+export type DeepAnalysis = {
   overall_score: number;
   summary: string;
-  market_opportunity: { score: number; notes: string };
-  feasibility: { score: number; notes: string };
-  competition: { score: number; notes: string };
-  monetization: { score: number; notes: string };
-  risks: string[];
+  market_analysis: {
+    market_size: string;
+    industry_trends: string[];
+    growth_potential: string;
+    risks: string[];
+    score: number;
+  };
+  competitor_analysis: {
+    competitors: Competitor[];
+    competitive_advantages: string[];
+    market_gaps: string[];
+    score: number;
+  };
+  business_validation: {
+    problem_statement: string;
+    solution_validation: string;
+    target_customers: string[];
+    product_market_fit_score: number;
+  };
+  revenue_model: {
+    revenue_streams: string[];
+    pricing_recommendations: string[];
+    growth_opportunities: string[];
+    score: number;
+  };
+  risk_analysis: {
+    technical_risks: string[];
+    business_risks: string[];
+    market_risks: string[];
+  };
   next_steps: string[];
 };
 
-const SYSTEM_PROMPT = `You are a senior venture analyst at VentureIQ AI. Given a startup idea, return a rigorous, candid analysis in strict JSON matching the requested schema. Scores are 0-100 integers. Be specific, avoid generic platitudes.`;
+const SYSTEM_PROMPT = `You are a senior venture analyst at VentureIQ AI. Produce a rigorous, candid, founder-grade analysis. Be specific to the idea — avoid generic platitudes. Use real-world reasoning about market dynamics, competitors, and monetization. Return STRICT JSON only matching the requested schema. All scores are integers 0-100.`;
 
 export const analyzeStartup = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
@@ -31,7 +64,7 @@ export const analyzeStartup = createServerFn({ method: "POST" })
     const apiKey = process.env.LOVABLE_API_KEY;
     if (!apiKey) throw new Error("AI service is not configured.");
 
-    const userPrompt = `Analyze this startup:
+    const userPrompt = `Analyze this startup and return ONLY valid JSON.
 
 Name: ${data.startup_name}
 Industry: ${data.industry || "n/a"}
@@ -41,24 +74,52 @@ Business model: ${data.business_model || "n/a"}
 Idea:
 ${data.startup_idea}
 
-Return ONLY a valid JSON object with this exact shape:
+JSON schema (exact shape):
 {
-  "overall_score": number 0-100,
-  "summary": string (2-3 sentences),
-  "market_opportunity": { "score": 0-100, "notes": string },
-  "feasibility": { "score": 0-100, "notes": string },
-  "competition": { "score": 0-100, "notes": string },
-  "monetization": { "score": 0-100, "notes": string },
-  "risks": [string, string, string],
-  "next_steps": [string, string, string, string]
-}`;
+  "overall_score": 0-100,
+  "summary": "2-3 sentence executive summary",
+  "market_analysis": {
+    "market_size": "TAM/SAM/SOM estimate with rationale",
+    "industry_trends": ["3-5 specific current trends"],
+    "growth_potential": "growth thesis, 2-3 sentences",
+    "risks": ["3-4 market-level risks"],
+    "score": 0-100
+  },
+  "competitor_analysis": {
+    "competitors": [
+      { "name": "Real or plausible name", "type": "direct" | "indirect", "description": "1 sentence", "strength": "their edge", "weakness": "their gap" }
+    ],
+    "competitive_advantages": ["3-4 advantages this startup could own"],
+    "market_gaps": ["3-4 unmet needs to exploit"],
+    "score": 0-100
+  },
+  "business_validation": {
+    "problem_statement": "the core problem in 1-2 sentences",
+    "solution_validation": "why this solution fits, 2-3 sentences",
+    "target_customers": ["3-4 specific customer segments"],
+    "product_market_fit_score": 0-100
+  },
+  "revenue_model": {
+    "revenue_streams": ["3-5 concrete streams"],
+    "pricing_recommendations": ["2-4 specific pricing ideas with numbers"],
+    "growth_opportunities": ["3-4 expansion paths"],
+    "score": 0-100
+  },
+  "risk_analysis": {
+    "technical_risks": ["3-4 risks"],
+    "business_risks": ["3-4 risks"],
+    "market_risks": ["3-4 risks"]
+  },
+  "next_steps": ["4-6 concrete next actions"]
+}
+
+Provide 4-6 competitors total — mix of direct and indirect.`;
 
     const resp = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
         "Lovable-API-Key": apiKey,
-        "X-Lovable-AIG-SDK": "vercel-ai-sdk",
       },
       body: JSON.stringify({
         model: "google/gemini-3-flash-preview",
@@ -79,7 +140,7 @@ Return ONLY a valid JSON object with this exact shape:
 
     const json = await resp.json();
     const content: string = json?.choices?.[0]?.message?.content ?? "";
-    let analysis: AnalysisJson;
+    let analysis: DeepAnalysis;
     try {
       analysis = JSON.parse(content);
     } catch {
