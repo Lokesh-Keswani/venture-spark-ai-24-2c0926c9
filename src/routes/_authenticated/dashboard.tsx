@@ -100,7 +100,7 @@ function Dashboard() {
       </div>
 
       <div className="mt-8 grid gap-6 lg:grid-cols-3">
-        <section className="rounded-xl border border-border bg-card p-5 shadow-soft lg:col-span-2">
+        <section className="min-w-0 rounded-xl border border-border bg-card p-5 shadow-soft lg:col-span-2">
           <div className="mb-4 flex items-center justify-between">
             <h2 className="font-display text-lg font-semibold">Recent activity</h2>
             <Link to="/projects" className="text-xs text-muted-foreground hover:text-foreground">
@@ -136,7 +136,7 @@ function Dashboard() {
           )}
         </section>
 
-        <section className="rounded-xl border border-border bg-card p-5 shadow-soft">
+        <section className="min-w-0 rounded-xl border border-border bg-card p-5 shadow-soft">
           <h2 className="mb-4 font-display text-lg font-semibold">Score overview</h2>
           {reports.length === 0 ? (
             <p className="text-sm text-muted-foreground">No analyses yet.</p>
