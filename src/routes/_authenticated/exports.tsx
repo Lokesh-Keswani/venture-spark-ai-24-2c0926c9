@@ -1,6 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { useServerFn } from "@tanstack/react-start";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
 import { Button } from "@/components/ui/button";
@@ -8,7 +7,6 @@ import { Download, FileText, Loader2, Sparkles, Trash2, Presentation, Map as Map
 import { useState } from "react";
 import { toast } from "sonner";
 import { formatDistanceToNow } from "date-fns";
-import { analyzeStartup } from "@/lib/analyze.functions";
 import {
   exportPitchPdf,
   exportRoadmapPdf,
