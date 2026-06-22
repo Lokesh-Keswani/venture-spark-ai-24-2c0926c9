@@ -36,8 +36,7 @@ function ExportsPage() {
   const { user } = useAuth();
   const qc = useQueryClient();
   const [busy, setBusy] = useState<string | null>(null);
-  // Force-unused server fn import keeps tree-shake honest (we re-export reports via project page)
-  useServerFn(analyzeStartup);
+
 
   const { data } = useQuery({
     queryKey: ["exports", user?.id],
