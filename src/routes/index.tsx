@@ -53,18 +53,9 @@ function Landing() {
                 <Link to="/dashboard">Dashboard</Link>
               </Button>
             ) : (
-              <>
-                <Button asChild variant="ghost" size="sm">
-                  <Link to="/auth" search={{ mode: "login" }}>
-                    Log in
-                  </Link>
-                </Button>
-                <Button asChild size="sm">
-                  <Link to="/auth" search={{ mode: "signup" }}>
-                    Get started
-                  </Link>
-                </Button>
-              </>
+              <Button asChild size="sm">
+                <Link to="/auth">Continue with Google</Link>
+              </Button>
             )}
           </div>
         </div>
@@ -89,13 +80,8 @@ function Landing() {
           </p>
           <div className="mt-8 flex flex-wrap items-center justify-center gap-3">
             <Button asChild size="lg" className="shadow-glow">
-              <Link to="/auth" search={{ mode: "signup" }}>
-                Analyze an idea <ArrowRight className="ml-1.5 h-4 w-4" />
-              </Link>
-            </Button>
-            <Button asChild size="lg" variant="outline">
-              <Link to="/auth" search={{ mode: "login" }}>
-                I have an account
+              <Link to="/auth">
+                Continue with Google <ArrowRight className="ml-1.5 h-4 w-4" />
               </Link>
             </Button>
           </div>
@@ -138,8 +124,8 @@ function Landing() {
             Free to start. No credit card required.
           </p>
           <Button asChild size="lg" className="mt-6 shadow-glow">
-            <Link to="/auth" search={{ mode: "signup" }}>
-              Create your account
+            <Link to="/auth">
+              Continue with Google
             </Link>
           </Button>
         </div>

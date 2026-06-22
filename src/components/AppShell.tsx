@@ -10,20 +10,24 @@ import {
   Moon,
   Sun,
   Menu,
+  MessageSquare,
+  Presentation,
+  Map,
+  Download,
 } from "lucide-react";
 import { useTheme } from "@/hooks/use-theme";
 import { useAuth } from "@/hooks/use-auth";
 import { Button } from "@/components/ui/button";
-import {
-  Sheet,
-  SheetContent,
-  SheetTrigger,
-} from "@/components/ui/sheet";
+import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { useState } from "react";
 
 const nav = [
   { to: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
   { to: "/projects", label: "Projects", icon: FolderKanban },
+  { to: "/coach", label: "AI Co-Founder", icon: MessageSquare },
+  { to: "/pitch", label: "Pitch Decks", icon: Presentation },
+  { to: "/roadmap", label: "Roadmaps", icon: Map },
+  { to: "/exports", label: "Exports", icon: Download },
   { to: "/profile", label: "Profile", icon: User },
   { to: "/settings", label: "Settings", icon: Settings },
 ] as const;
@@ -37,7 +41,7 @@ export function AppShell({ children }: { children: ReactNode }) {
       </aside>
 
       <div className="flex min-w-0 flex-1 flex-col">
-        <header className="sticky top-0 z-30 flex h-14 items-center justify-between border-b border-border bg-background/80 px-4 backdrop-blur md:px-6">
+        <header className="sticky top-0 z-30 flex h-14 items-center justify-between border-b border-border bg-background/70 px-4 backdrop-blur md:px-6">
           <div className="flex items-center gap-2 md:hidden">
             <Sheet open={open} onOpenChange={setOpen}>
               <SheetTrigger asChild>
@@ -67,7 +71,7 @@ function SidebarBody({ onNavigate }: { onNavigate?: () => void }) {
       <div className="flex h-14 items-center border-b border-sidebar-border px-4">
         <Brand />
       </div>
-      <nav className="flex-1 space-y-0.5 p-3">
+      <nav className="flex-1 space-y-0.5 overflow-y-auto p-3">
         {nav.map((item) => {
           const active = pathname === item.to || pathname.startsWith(item.to + "/");
           return (
