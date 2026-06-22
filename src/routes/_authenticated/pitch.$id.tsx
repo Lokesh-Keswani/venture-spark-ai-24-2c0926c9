@@ -120,8 +120,7 @@ function DeckView() {
             className="border-0 bg-transparent px-0 font-display text-2xl font-semibold tracking-tight focus-visible:ring-0 sm:text-3xl"
           />
           <p className="mt-1 text-xs text-muted-foreground">
-            {/* @ts-expect-error nested */}
-            {data.startup_projects?.startup_name}
+            {(data.startup_projects as { startup_name?: string } | null)?.startup_name}
           </p>
         </div>
         <div className="flex gap-2">

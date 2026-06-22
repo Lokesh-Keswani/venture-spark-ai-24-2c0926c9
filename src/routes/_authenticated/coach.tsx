@@ -99,8 +99,7 @@ function Coach() {
               <div className="min-w-0 flex-1">
                 <div className="truncate text-sm">{c.title}</div>
                 <div className="truncate text-[10px] text-muted-foreground">
-                  {/* @ts-expect-error nested select */}
-                  {c.startup_projects?.startup_name ?? "General"} ·{" "}
+                  {(c.startup_projects as { startup_name?: string } | null)?.startup_name ?? "General"} ·{" "}
                   {formatDistanceToNow(new Date(c.updated_at), { addSuffix: true })}
                 </div>
               </div>

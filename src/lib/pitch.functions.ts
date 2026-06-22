@@ -72,7 +72,7 @@ Be specific with numbers, names, dollar amounts where reasonable.`;
         user_id: userId,
         project_id: proj.id,
         title: deck.title ?? `${proj.startup_name} Pitch Deck`,
-        slides: deck.slides as unknown as object,
+        slides: deck.slides as never,
       })
       .select("id")
       .single();

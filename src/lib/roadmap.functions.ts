@@ -63,7 +63,7 @@ Return ONLY JSON:
       .insert({
         user_id: userId,
         project_id: proj.id,
-        plan: plan as unknown as object,
+        plan: plan as never,
       })
       .select("id")
       .single();
