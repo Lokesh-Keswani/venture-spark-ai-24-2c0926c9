@@ -2,6 +2,7 @@ import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/hooks/use-auth";
 import { Button } from "@/components/ui/button";
 import {
   ArrowLeft,
@@ -15,9 +16,11 @@ import {
   ShieldAlert,
   Users,
   Lightbulb,
+  Download,
 } from "lucide-react";
 import { toast } from "sonner";
 import { analyzeStartup, type DeepAnalysis, type Competitor } from "@/lib/analyze.functions";
+import { exportReportPdf, uploadExport, downloadBlob } from "@/lib/pdf";
 import { useState } from "react";
 import { formatDistanceToNow } from "date-fns";
 
@@ -30,8 +33,10 @@ function ProjectDetail() {
   const { id } = Route.useParams();
   const navigate = useNavigate();
   const qc = useQueryClient();
+  const { user } = useAuth();
   const analyze = useServerFn(analyzeStartup);
   const [busy, setBusy] = useState(false);
+  const [exporting, setExporting] = useState(false);
 
   const { data, isLoading } = useQuery({
     queryKey: ["project", id],
@@ -96,6 +101,33 @@ function ProjectDetail() {
     navigate({ to: "/projects" });
   }
 
+  async function downloadAnalysis() {
+    if (!user || !analysis || !latest) return;
+    setExporting(true);
+    try {
+      toast.loading("Building your analysis PDF…", { id: "dl" });
+      const blob = await exportReportPdf(project.startup_name, analysis);
+      const filename = `${slugify(project.startup_name)}-analysis.pdf`;
+      try {
+        await uploadExport(user.id, "report", filename, blob);
+        await supabase.from("user_activity").insert({
+          user_id: user.id,
+          kind: "export",
+          label: `Exported analysis: ${project.startup_name}`,
+          ref_id: latest.id,
+        });
+      } catch {
+        // Storage save is best-effort — still let the user download.
+      }
+      downloadBlob(blob, filename);
+      toast.success("Analysis downloaded", { id: "dl" });
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Export failed", { id: "dl" });
+    } finally {
+      setExporting(false);
+    }
+  }
+
   return (
     <div className="mx-auto max-w-5xl px-4 py-8 sm:px-6">
       <Link
@@ -114,7 +146,22 @@ function ProjectDetail() {
             {project.industry || "—"} · {project.business_model || "—"}
           </p>
         </div>
-        <div className="flex gap-2">
+        <div className="flex flex-wrap gap-2">
+          {analysis && (
+            <Button
+              size="sm"
+              onClick={downloadAnalysis}
+              disabled={exporting}
+              className="shadow-glow"
+            >
+              {exporting ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : (
+                <Download className="mr-1.5 h-4 w-4" />
+              )}
+              Download Analysis
+            </Button>
+          )}
           <Button variant="outline" size="sm" onClick={rerun} disabled={busy}>
             {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : <RefreshCw className="mr-1.5 h-4 w-4" />}
             Re-analyze
@@ -411,4 +458,8 @@ function CompetitorCard({ c }: { c: Competitor }) {
       </div>
     </div>
   );
+}
+
+function slugify(s: string) {
+  return s.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "") || "analysis";
 }
