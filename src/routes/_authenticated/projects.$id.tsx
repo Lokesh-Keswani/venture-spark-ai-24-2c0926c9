@@ -146,7 +146,22 @@ function ProjectDetail() {
             {project.industry || "—"} · {project.business_model || "—"}
           </p>
         </div>
-        <div className="flex gap-2">
+        <div className="flex flex-wrap gap-2">
+          {analysis && (
+            <Button
+              size="sm"
+              onClick={downloadAnalysis}
+              disabled={exporting}
+              className="shadow-glow"
+            >
+              {exporting ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : (
+                <Download className="mr-1.5 h-4 w-4" />
+              )}
+              Download Analysis
+            </Button>
+          )}
           <Button variant="outline" size="sm" onClick={rerun} disabled={busy}>
             {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : <RefreshCw className="mr-1.5 h-4 w-4" />}
             Re-analyze
