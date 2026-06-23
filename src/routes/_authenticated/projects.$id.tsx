@@ -33,8 +33,10 @@ function ProjectDetail() {
   const { id } = Route.useParams();
   const navigate = useNavigate();
   const qc = useQueryClient();
+  const { user } = useAuth();
   const analyze = useServerFn(analyzeStartup);
   const [busy, setBusy] = useState(false);
+  const [exporting, setExporting] = useState(false);
 
   const { data, isLoading } = useQuery({
     queryKey: ["project", id],
