@@ -444,3 +444,7 @@ function CompetitorCard({ c }: { c: Competitor }) {
     </div>
   );
 }
+
+function slugify(s: string) {
+  return s.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "") || "analysis";
+}
