@@ -101,6 +101,33 @@ function ProjectDetail() {
     navigate({ to: "/projects" });
   }
 
+  async function downloadAnalysis() {
+    if (!user || !analysis || !latest) return;
+    setExporting(true);
+    try {
+      toast.loading("Building your analysis PDF…", { id: "dl" });
+      const blob = await exportReportPdf(project.startup_name, analysis);
+      const filename = `${slugify(project.startup_name)}-analysis.pdf`;
+      try {
+        await uploadExport(user.id, "report", filename, blob);
+        await supabase.from("user_activity").insert({
+          user_id: user.id,
+          kind: "export",
+          label: `Exported analysis: ${project.startup_name}`,
+          ref_id: latest.id,
+        });
+      } catch {
+        // Storage save is best-effort — still let the user download.
+      }
+      downloadBlob(blob, filename);
+      toast.success("Analysis downloaded", { id: "dl" });
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Export failed", { id: "dl" });
+    } finally {
+      setExporting(false);
+    }
+  }
+
   return (
     <div className="mx-auto max-w-5xl px-4 py-8 sm:px-6">
       <Link
