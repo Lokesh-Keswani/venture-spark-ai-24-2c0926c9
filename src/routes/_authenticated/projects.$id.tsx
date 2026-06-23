@@ -2,6 +2,7 @@ import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/hooks/use-auth";
 import { Button } from "@/components/ui/button";
 import {
   ArrowLeft,
@@ -15,9 +16,11 @@ import {
   ShieldAlert,
   Users,
   Lightbulb,
+  Download,
 } from "lucide-react";
 import { toast } from "sonner";
 import { analyzeStartup, type DeepAnalysis, type Competitor } from "@/lib/analyze.functions";
+import { exportReportPdf, uploadExport, downloadBlob } from "@/lib/pdf";
 import { useState } from "react";
 import { formatDistanceToNow } from "date-fns";
 
