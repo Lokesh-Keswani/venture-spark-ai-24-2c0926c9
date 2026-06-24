@@ -21,6 +21,35 @@ function PitchList() {
   const qc = useQueryClient();
   const generate = useServerFn(generatePitchDeck);
   const [busyId, setBusyId] = useState<string | null>(null);
+  const [dlId, setDlId] = useState<string | null>(null);
+
+  async function download(id: string, title: string) {
+    if (!user) return;
+    setDlId(id);
+    try {
+      toast.loading("Preparing PDF…", { id: "dl" });
+      const { data: deck, error } = await supabase
+        .from("pitch_decks")
+        .select("slides, title")
+        .eq("id", id)
+        .single();
+      if (error) throw error;
+      const blob = await exportPitchPdf(deck.title ?? title, (deck.slides as unknown as Slide[]) ?? []);
+      const filename = `${(deck.title ?? title).toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "") || "deck"}.pdf`;
+      const path = await uploadExport(user.id, "pitch", filename, blob);
+      await supabase.from("pitch_decks").update({ pdf_path: path }).eq("id", id);
+      await supabase.from("user_activity").insert({
+        user_id: user.id, kind: "export",
+        label: `Exported pitch deck: ${deck.title ?? title}`, ref_id: id,
+      });
+      downloadBlob(blob, filename);
+      toast.success("Downloaded", { id: "dl" });
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Download failed", { id: "dl" });
+    } finally {
+      setDlId(null);
+    }
+  }
 
   const { data } = useQuery({
     queryKey: ["pitch-decks", user?.id],
