@@ -5,8 +5,9 @@ import { useServerFn } from "@tanstack/react-start";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
 import { Button } from "@/components/ui/button";
-import { Presentation, Plus, Loader2, Sparkles, Trash2 } from "lucide-react";
-import { generatePitchDeck } from "@/lib/pitch.functions";
+import { Presentation, Plus, Loader2, Sparkles, Trash2, Download } from "lucide-react";
+import { generatePitchDeck, type Slide } from "@/lib/pitch.functions";
+import { exportPitchPdf, uploadExport, downloadBlob } from "@/lib/pdf";
 import { toast } from "sonner";
 import { formatDistanceToNow } from "date-fns";
 
