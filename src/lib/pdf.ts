@@ -688,63 +688,111 @@ export async function exportRoadmapPdf(name: string, plan: RoadmapPlan): Promise
 
 /* ============================================================
  * PITCH DECK — landscape, slide-per-page
+ * Safe-area layout: decorations are clipped to corners that never
+ * intersect the text content box.
  * ============================================================ */
+const SLIDE = {
+  padX: 64,
+  topSafe: 72, // content starts below decorative band
+  bottomSafe: 64, // content must end above footer
+  decoTop: 56, // max y a top decoration may reach
+};
+
 function drawSlideChrome(doc: jsPDF, title: string, page: number, total: number) {
   const { W, H } = pageSize(doc);
+  // base
   setFill(doc, T.bg);
   doc.rect(0, 0, W, H, "F");
-  // accent corner shapes
+
+  // top decorative band — confined to top 48pt so it never overlaps text
   setFill(doc, T.primarySoft);
-  doc.circle(W + 40, -40, 180, "F");
+  doc.rect(0, 0, W, 36, "F");
+  setFill(doc, T.primary);
+  doc.rect(0, 36, W, 2, "F");
+  // tiny accent dot in band (decorative, in chrome area only)
   setFill(doc, T.accent);
-  doc.circle(W - 40, 40, 50, "F");
+  doc.circle(W - 28, 18, 10, "F");
+
+  // bottom-left subtle accent square in footer chrome only
+  setFill(doc, T.primarySoft);
+  doc.rect(0, H - 6, W, 6, "F");
+
+  // brand top-left
+  setText(doc, T.primaryDeep);
+  doc.setFont("helvetica", "bold");
+  doc.setFontSize(9);
+  doc.text("VENTUREIQ AI", 48, 22);
+
   // footer
   setStroke(doc, T.border);
-  doc.setLineWidth(0.6);
-  doc.line(48, H - 36, W - 48, H - 36);
+  doc.setLineWidth(0.5);
+  doc.line(48, H - 32, W - 48, H - 32);
   setText(doc, T.inkMuted);
   doc.setFont("helvetica", "normal");
   doc.setFontSize(9);
-  doc.text(title, 48, H - 20);
+  const ftitle = doc.splitTextToSize(title || "", W - 160)[0] ?? "";
+  doc.text(ftitle, 48, H - 18);
   const label = `${page} / ${total}`;
   const tw = doc.getTextWidth(label);
-  doc.text(label, W - 48 - tw, H - 20);
+  doc.text(label, W - 48 - tw, H - 18);
 }
 
 function drawPitchCover(doc: jsPDF, title: string, subtitle?: string) {
   const { W, H } = pageSize(doc);
   setFill(doc, T.primaryDeep);
   doc.rect(0, 0, W, H, "F");
-  // soft shapes
+
+  // Decorations confined to right strip (W*0.62..W) so they never
+  // cross the text column on the left.
   setFill(doc, T.primary);
-  doc.circle(W - 80, -40, 200, "F");
+  doc.circle(W + 60, -40, 200, "F");
   setFill(doc, T.accent);
-  doc.circle(80, H - 40, 160, "F");
+  doc.circle(W - 60, H + 40, 160, "F");
+
+  // Text column — left 58% of width
+  const colX = 64;
+  const colW = W * 0.58 - 64;
 
   setText(doc, [255, 255, 255]);
   doc.setFont("helvetica", "bold");
   doc.setFontSize(10);
-  doc.text("VENTUREIQ AI · PITCH DECK", 60, 60);
+  doc.text("VENTUREIQ AI · PITCH DECK", colX, 72);
 
-  doc.setFontSize(54);
-  const titleLines = doc.splitTextToSize(title, W - 120);
-  doc.text(titleLines, 60, H / 2 - 20);
+  // dynamic title sizing
+  doc.setFont("helvetica", "bold");
+  let titleSize = 48;
+  let titleLines = doc.splitTextToSize(title || "Pitch Deck", colW);
+  while ((titleSize > 26) && (titleLines.length > 3 || titleSize * 0.6 * (titleLines[0]?.length ?? 0) > colW * 1.4)) {
+    titleSize -= 4;
+    doc.setFontSize(titleSize);
+    titleLines = doc.splitTextToSize(title || "Pitch Deck", colW);
+    if (titleLines.length <= 3) break;
+  }
+  doc.setFontSize(titleSize);
+  setText(doc, [255, 255, 255]);
+  const lh = titleSize * 1.1;
+  const blockH = titleLines.length * lh;
+  const titleY = (H - blockH) / 2;
+  doc.text(titleLines, colX, titleY);
 
   if (subtitle) {
-    doc.setFont("helvetica", "normal");
-    doc.setFontSize(16);
     setText(doc, T.accent);
-    const subLines = doc.splitTextToSize(subtitle, W - 120);
-    doc.text(subLines, 60, H / 2 - 20 + titleLines.length * 58);
+    doc.setFont("helvetica", "normal");
+    doc.setFontSize(14);
+    const subLines = doc.splitTextToSize(subtitle, colW);
+    const subY = titleY + blockH + 18;
+    if (subY + subLines.length * 18 < H - 80) {
+      doc.text(subLines.slice(0, 3), colX, subY);
+    }
   }
 
   setText(doc, T.accent);
   doc.setFont("helvetica", "normal");
-  doc.setFontSize(10);
+  doc.setFontSize(9);
   doc.text(
     new Date().toLocaleDateString(undefined, { year: "numeric", month: "long", day: "numeric" }),
-    60,
-    H - 60,
+    colX,
+    H - 48,
   );
 }
 
@@ -752,81 +800,154 @@ function drawPitchClosing(doc: jsPDF, title: string) {
   const { W, H } = pageSize(doc);
   setFill(doc, T.primaryDeep);
   doc.rect(0, 0, W, H, "F");
+  // background circle in lower region only — text sits ABOVE it
   setFill(doc, T.primary);
-  doc.circle(W / 2, H / 2 + 100, 220, "F");
+  doc.circle(W / 2, H + 80, 260, "F");
 
   setText(doc, [255, 255, 255]);
   doc.setFont("helvetica", "bold");
-  doc.setFontSize(60);
+  doc.setFontSize(56);
   const text = "Thank you.";
   const tw = doc.getTextWidth(text);
-  doc.text(text, W / 2 - tw / 2, H / 2);
+  doc.text(text, W / 2 - tw / 2, H / 2 - 10);
 
   setText(doc, T.accent);
   doc.setFont("helvetica", "normal");
-  doc.setFontSize(14);
-  const sw = doc.getTextWidth(title);
-  doc.text(title, W / 2 - sw / 2, H / 2 + 30);
+  doc.setFontSize(13);
+  const tLines = doc.splitTextToSize(title || "", W - 200);
+  const sub = tLines[0] ?? "";
+  const sw = doc.getTextWidth(sub);
+  doc.text(sub, W / 2 - sw / 2, H / 2 + 20);
+}
+
+// Measure the total vertical height a slide's body would take at given sizes.
+function measureSlide(
+  doc: jsPDF,
+  slide: Slide,
+  W: number,
+  opts: { titleSize: number; subSize: number; bodySize: number; bulletSize: number },
+) {
+  const contentW = W - SLIDE.padX * 2;
+  let h = 0;
+  // eyebrow
+  h += 22;
+  // title
+  doc.setFont("helvetica", "bold");
+  doc.setFontSize(opts.titleSize);
+  const titleLines = doc.splitTextToSize(slide.title ?? "", contentW);
+  h += titleLines.length * (opts.titleSize * 1.12) + 6;
+  // subtitle
+  if (slide.subtitle) {
+    doc.setFont("helvetica", "normal");
+    doc.setFontSize(opts.subSize);
+    const subLines = doc.splitTextToSize(slide.subtitle, contentW);
+    h += subLines.length * (opts.subSize * 1.3) + 8;
+  }
+  // divider
+  h += 18;
+  // body
+  if (slide.body) {
+    doc.setFont("helvetica", "normal");
+    doc.setFontSize(opts.bodySize);
+    const bodyLines = doc.splitTextToSize(slide.body, contentW);
+    h += bodyLines.length * (opts.bodySize * 1.38) + 10;
+  }
+  // bullets
+  if (slide.bullets?.length) {
+    doc.setFont("helvetica", "normal");
+    doc.setFontSize(opts.bulletSize);
+    for (const b of slide.bullets) {
+      const lines = doc.splitTextToSize(b, contentW - 24);
+      h += lines.length * (opts.bulletSize * 1.38) + 6;
+    }
+  }
+  return { h, titleLines };
 }
 
 function drawSlide(doc: jsPDF, slide: Slide, deckTitle: string, idx: number, total: number) {
   drawSlideChrome(doc, deckTitle, idx, total);
   const { W, H } = pageSize(doc);
-  const padX = 64;
-  let y = 84;
+  const padX = SLIDE.padX;
+  const contentW = W - padX * 2;
+  const availableH = H - SLIDE.topSafe - SLIDE.bottomSafe;
+
+  // Auto-fit: pick the largest typography that fits the safe content box.
+  const scales = [
+    { titleSize: 34, subSize: 15, bodySize: 13, bulletSize: 13 },
+    { titleSize: 30, subSize: 14, bodySize: 12.5, bulletSize: 12.5 },
+    { titleSize: 26, subSize: 13, bodySize: 12, bulletSize: 12 },
+    { titleSize: 22, subSize: 12, bodySize: 11, bulletSize: 11 },
+    { titleSize: 19, subSize: 11, bodySize: 10.5, bulletSize: 10.5 },
+  ];
+  let chosen = scales[scales.length - 1];
+  for (const s of scales) {
+    const { h } = measureSlide(doc, slide, W, s);
+    if (h <= availableH) {
+      chosen = s;
+      break;
+    }
+  }
+
+  let y = SLIDE.topSafe;
 
   // kind eyebrow
   setText(doc, T.primaryDeep);
   doc.setFont("helvetica", "bold");
-  doc.setFontSize(10);
+  doc.setFontSize(9.5);
   doc.text((slide.kind ?? "").replace(/_/g, " ").toUpperCase(), padX, y);
-  y += 22;
+  y += 18;
 
   // title
   setText(doc, T.ink);
   doc.setFont("helvetica", "bold");
-  doc.setFontSize(34);
-  const titleLines = doc.splitTextToSize(slide.title ?? "", W - padX * 2);
-  doc.text(titleLines, padX, y + 26);
-  y += titleLines.length * 38 + 6;
+  doc.setFontSize(chosen.titleSize);
+  const titleLines = doc.splitTextToSize(slide.title ?? "", contentW);
+  const titleLh = chosen.titleSize * 1.12;
+  doc.text(titleLines, padX, y + chosen.titleSize * 0.85);
+  y += titleLines.length * titleLh + 4;
 
   // subtitle
   if (slide.subtitle) {
     setText(doc, T.inkSoft);
     doc.setFont("helvetica", "normal");
-    doc.setFontSize(14);
-    const subLines = doc.splitTextToSize(slide.subtitle, W - padX * 2);
-    doc.text(subLines, padX, y + 14);
-    y += subLines.length * 18 + 10;
+    doc.setFontSize(chosen.subSize);
+    const subLines = doc.splitTextToSize(slide.subtitle, contentW);
+    const subLh = chosen.subSize * 1.3;
+    doc.text(subLines, padX, y + chosen.subSize);
+    y += subLines.length * subLh + 6;
   }
 
   // divider
   setFill(doc, T.primary);
-  doc.rect(padX, y + 4, 40, 2.5, "F");
-  y += 22;
+  doc.rect(padX, y + 2, 36, 2.5, "F");
+  y += 16;
 
   // body
   if (slide.body) {
     setText(doc, T.ink);
     doc.setFont("helvetica", "normal");
-    doc.setFontSize(13);
-    const bodyLines = doc.splitTextToSize(slide.body, W - padX * 2);
-    doc.text(bodyLines, padX, y + 14);
-    y += bodyLines.length * 18 + 14;
+    doc.setFontSize(chosen.bodySize);
+    const bodyLines = doc.splitTextToSize(slide.body, contentW);
+    const lh = chosen.bodySize * 1.38;
+    doc.text(bodyLines, padX, y + chosen.bodySize);
+    y += bodyLines.length * lh + 8;
   }
 
-  // bullets
+  // bullets — clipped to safe bottom so text never collides with footer
   if (slide.bullets?.length) {
     doc.setFont("helvetica", "normal");
-    doc.setFontSize(13);
+    doc.setFontSize(chosen.bulletSize);
+    const lh = chosen.bulletSize * 1.38;
+    const maxY = H - SLIDE.bottomSafe;
     for (const b of slide.bullets) {
-      if (y > H - 80) break;
-      const lines = doc.splitTextToSize(b, W - padX * 2 - 24);
+      const lines = doc.splitTextToSize(b, contentW - 24);
+      const block = lines.length * lh + 6;
+      if (y + block > maxY) break;
       setFill(doc, T.primary);
-      doc.circle(padX + 6, y + 9, 3, "F");
+      doc.circle(padX + 6, y + chosen.bulletSize * 0.6, 2.6, "F");
       setText(doc, T.ink);
-      doc.text(lines, padX + 20, y + 12);
-      y += lines.length * 18 + 6;
+      doc.text(lines, padX + 18, y + chosen.bulletSize * 0.85);
+      y += block;
     }
   }
 }
