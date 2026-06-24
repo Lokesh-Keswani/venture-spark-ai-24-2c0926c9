@@ -129,7 +129,8 @@ function DeckView() {
             Save
           </Button>
           <Button size="sm" onClick={exportPdf} disabled={busy} className="shadow-glow">
-            <Download className="mr-1.5 h-4 w-4" /> Export PDF
+            {busy ? <Loader2 className="mr-1.5 h-4 w-4 animate-spin" /> : <Download className="mr-1.5 h-4 w-4" />}
+            Download Pitch Deck
           </Button>
         </div>
       </div>

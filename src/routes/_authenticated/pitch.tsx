@@ -5,8 +5,9 @@ import { useServerFn } from "@tanstack/react-start";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
 import { Button } from "@/components/ui/button";
-import { Presentation, Plus, Loader2, Sparkles, Trash2 } from "lucide-react";
-import { generatePitchDeck } from "@/lib/pitch.functions";
+import { Presentation, Plus, Loader2, Sparkles, Trash2, Download } from "lucide-react";
+import { generatePitchDeck, type Slide } from "@/lib/pitch.functions";
+import { exportPitchPdf, uploadExport, downloadBlob } from "@/lib/pdf";
 import { toast } from "sonner";
 import { formatDistanceToNow } from "date-fns";
 
@@ -20,6 +21,35 @@ function PitchList() {
   const qc = useQueryClient();
   const generate = useServerFn(generatePitchDeck);
   const [busyId, setBusyId] = useState<string | null>(null);
+  const [dlId, setDlId] = useState<string | null>(null);
+
+  async function download(id: string, title: string) {
+    if (!user) return;
+    setDlId(id);
+    try {
+      toast.loading("Preparing PDF…", { id: "dl" });
+      const { data: deck, error } = await supabase
+        .from("pitch_decks")
+        .select("slides, title")
+        .eq("id", id)
+        .single();
+      if (error) throw error;
+      const blob = await exportPitchPdf(deck.title ?? title, (deck.slides as unknown as Slide[]) ?? []);
+      const filename = `${(deck.title ?? title).toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "") || "deck"}.pdf`;
+      const path = await uploadExport(user.id, "pitch", filename, blob);
+      await supabase.from("pitch_decks").update({ pdf_path: path }).eq("id", id);
+      await supabase.from("user_activity").insert({
+        user_id: user.id, kind: "export",
+        label: `Exported pitch deck: ${deck.title ?? title}`, ref_id: id,
+      });
+      downloadBlob(blob, filename);
+      toast.success("Downloaded", { id: "dl" });
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Download failed", { id: "dl" });
+    } finally {
+      setDlId(null);
+    }
+  }
 
   const { data } = useQuery({
     queryKey: ["pitch-decks", user?.id],
@@ -145,6 +175,22 @@ function PitchList() {
                       {formatDistanceToNow(new Date(d.created_at), { addSuffix: true })}
                     </p>
                   </Link>
+                  <div className="mt-3 flex gap-2">
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      className="flex-1"
+                      onClick={() => download(d.id, d.title)}
+                      disabled={dlId === d.id}
+                    >
+                      {dlId === d.id ? (
+                        <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" />
+                      ) : (
+                        <Download className="mr-1.5 h-3.5 w-3.5" />
+                      )}
+                      Download Pitch Deck
+                    </Button>
+                  </div>
                   <button
                     onClick={() => remove(d.id)}
                     className="absolute right-2 top-2 hidden rounded p-1 text-muted-foreground hover:bg-background hover:text-destructive group-hover:inline-flex"
