@@ -175,6 +175,22 @@ function PitchList() {
                       {formatDistanceToNow(new Date(d.created_at), { addSuffix: true })}
                     </p>
                   </Link>
+                  <div className="mt-3 flex gap-2">
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      className="flex-1"
+                      onClick={() => download(d.id, d.title)}
+                      disabled={dlId === d.id}
+                    >
+                      {dlId === d.id ? (
+                        <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" />
+                      ) : (
+                        <Download className="mr-1.5 h-3.5 w-3.5" />
+                      )}
+                      Download Pitch Deck
+                    </Button>
+                  </div>
                   <button
                     onClick={() => remove(d.id)}
                     className="absolute right-2 top-2 hidden rounded p-1 text-muted-foreground hover:bg-background hover:text-destructive group-hover:inline-flex"
