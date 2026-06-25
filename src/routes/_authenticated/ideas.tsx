@@ -4,7 +4,7 @@ import { useServerFn } from "@tanstack/react-start";
 import { useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
-import { AppShell } from "@/components/AppShell";
+
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -36,11 +36,7 @@ import { analyzeStartup } from "@/lib/analyze.functions";
 
 export const Route = createFileRoute("/_authenticated/ideas")({
   head: () => ({ meta: [{ title: "Idea Generator — VentureIQ AI" }] }),
-  component: () => (
-    <AppShell>
-      <IdeasPage />
-    </AppShell>
-  ),
+  component: IdeasPage,
 });
 
 type Category = "saas" | "ai" | "micro-saas" | "marketplace" | "consumer" | "fintech" | "custom";

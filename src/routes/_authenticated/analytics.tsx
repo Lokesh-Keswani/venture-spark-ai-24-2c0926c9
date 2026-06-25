@@ -3,7 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import { useMemo } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
-import { AppShell } from "@/components/AppShell";
+
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -37,11 +37,7 @@ import { formatDistanceToNow, format } from "date-fns";
 
 export const Route = createFileRoute("/_authenticated/analytics")({
   head: () => ({ meta: [{ title: "Analytics — VentureIQ AI" }] }),
-  component: () => (
-    <AppShell>
-      <AnalyticsPage />
-    </AppShell>
-  ),
+  component: AnalyticsPage,
 });
 
 type Report = {
