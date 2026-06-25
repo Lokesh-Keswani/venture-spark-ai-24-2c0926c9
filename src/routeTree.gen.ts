@@ -16,9 +16,11 @@ import { Route as AuthenticatedSettingsRouteImport } from './routes/_authenticat
 import { Route as AuthenticatedRoadmapRouteImport } from './routes/_authenticated/roadmap'
 import { Route as AuthenticatedProfileRouteImport } from './routes/_authenticated/profile'
 import { Route as AuthenticatedPitchRouteImport } from './routes/_authenticated/pitch'
+import { Route as AuthenticatedIdeasRouteImport } from './routes/_authenticated/ideas'
 import { Route as AuthenticatedExportsRouteImport } from './routes/_authenticated/exports'
 import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
 import { Route as AuthenticatedCoachRouteImport } from './routes/_authenticated/coach'
+import { Route as AuthenticatedAnalyticsRouteImport } from './routes/_authenticated/analytics'
 import { Route as AuthenticatedProjectsIndexRouteImport } from './routes/_authenticated/projects.index'
 import { Route as AuthenticatedProjectsNewRouteImport } from './routes/_authenticated/projects.new'
 import { Route as AuthenticatedProjectsIdRouteImport } from './routes/_authenticated/projects.$id'
@@ -58,6 +60,11 @@ const AuthenticatedPitchRoute = AuthenticatedPitchRouteImport.update({
   path: '/pitch',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedIdeasRoute = AuthenticatedIdeasRouteImport.update({
+  id: '/ideas',
+  path: '/ideas',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
 const AuthenticatedExportsRoute = AuthenticatedExportsRouteImport.update({
   id: '/exports',
   path: '/exports',
@@ -71,6 +78,11 @@ const AuthenticatedDashboardRoute = AuthenticatedDashboardRouteImport.update({
 const AuthenticatedCoachRoute = AuthenticatedCoachRouteImport.update({
   id: '/coach',
   path: '/coach',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedAnalyticsRoute = AuthenticatedAnalyticsRouteImport.update({
+  id: '/analytics',
+  path: '/analytics',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
 const AuthenticatedProjectsIndexRoute =
@@ -99,9 +111,11 @@ const AuthenticatedPitchIdRoute = AuthenticatedPitchIdRouteImport.update({
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
+  '/analytics': typeof AuthenticatedAnalyticsRoute
   '/coach': typeof AuthenticatedCoachRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/exports': typeof AuthenticatedExportsRoute
+  '/ideas': typeof AuthenticatedIdeasRoute
   '/pitch': typeof AuthenticatedPitchRouteWithChildren
   '/profile': typeof AuthenticatedProfileRoute
   '/roadmap': typeof AuthenticatedRoadmapRoute
@@ -114,9 +128,11 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
+  '/analytics': typeof AuthenticatedAnalyticsRoute
   '/coach': typeof AuthenticatedCoachRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/exports': typeof AuthenticatedExportsRoute
+  '/ideas': typeof AuthenticatedIdeasRoute
   '/pitch': typeof AuthenticatedPitchRouteWithChildren
   '/profile': typeof AuthenticatedProfileRoute
   '/roadmap': typeof AuthenticatedRoadmapRoute
@@ -131,9 +147,11 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/_authenticated': typeof AuthenticatedRouteRouteWithChildren
   '/auth': typeof AuthRoute
+  '/_authenticated/analytics': typeof AuthenticatedAnalyticsRoute
   '/_authenticated/coach': typeof AuthenticatedCoachRoute
   '/_authenticated/dashboard': typeof AuthenticatedDashboardRoute
   '/_authenticated/exports': typeof AuthenticatedExportsRoute
+  '/_authenticated/ideas': typeof AuthenticatedIdeasRoute
   '/_authenticated/pitch': typeof AuthenticatedPitchRouteWithChildren
   '/_authenticated/profile': typeof AuthenticatedProfileRoute
   '/_authenticated/roadmap': typeof AuthenticatedRoadmapRoute
@@ -148,9 +166,11 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/auth'
+    | '/analytics'
     | '/coach'
     | '/dashboard'
     | '/exports'
+    | '/ideas'
     | '/pitch'
     | '/profile'
     | '/roadmap'
@@ -163,9 +183,11 @@ export interface FileRouteTypes {
   to:
     | '/'
     | '/auth'
+    | '/analytics'
     | '/coach'
     | '/dashboard'
     | '/exports'
+    | '/ideas'
     | '/pitch'
     | '/profile'
     | '/roadmap'
@@ -179,9 +201,11 @@ export interface FileRouteTypes {
     | '/'
     | '/_authenticated'
     | '/auth'
+    | '/_authenticated/analytics'
     | '/_authenticated/coach'
     | '/_authenticated/dashboard'
     | '/_authenticated/exports'
+    | '/_authenticated/ideas'
     | '/_authenticated/pitch'
     | '/_authenticated/profile'
     | '/_authenticated/roadmap'
@@ -249,6 +273,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedPitchRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/ideas': {
+      id: '/_authenticated/ideas'
+      path: '/ideas'
+      fullPath: '/ideas'
+      preLoaderRoute: typeof AuthenticatedIdeasRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/exports': {
       id: '/_authenticated/exports'
       path: '/exports'
@@ -268,6 +299,13 @@ declare module '@tanstack/react-router' {
       path: '/coach'
       fullPath: '/coach'
       preLoaderRoute: typeof AuthenticatedCoachRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/analytics': {
+      id: '/_authenticated/analytics'
+      path: '/analytics'
+      fullPath: '/analytics'
+      preLoaderRoute: typeof AuthenticatedAnalyticsRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/projects/': {
@@ -313,9 +351,11 @@ const AuthenticatedPitchRouteWithChildren =
   AuthenticatedPitchRoute._addFileChildren(AuthenticatedPitchRouteChildren)
 
 interface AuthenticatedRouteRouteChildren {
+  AuthenticatedAnalyticsRoute: typeof AuthenticatedAnalyticsRoute
   AuthenticatedCoachRoute: typeof AuthenticatedCoachRoute
   AuthenticatedDashboardRoute: typeof AuthenticatedDashboardRoute
   AuthenticatedExportsRoute: typeof AuthenticatedExportsRoute
+  AuthenticatedIdeasRoute: typeof AuthenticatedIdeasRoute
   AuthenticatedPitchRoute: typeof AuthenticatedPitchRouteWithChildren
   AuthenticatedProfileRoute: typeof AuthenticatedProfileRoute
   AuthenticatedRoadmapRoute: typeof AuthenticatedRoadmapRoute
@@ -326,9 +366,11 @@ interface AuthenticatedRouteRouteChildren {
 }
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
+  AuthenticatedAnalyticsRoute: AuthenticatedAnalyticsRoute,
   AuthenticatedCoachRoute: AuthenticatedCoachRoute,
   AuthenticatedDashboardRoute: AuthenticatedDashboardRoute,
   AuthenticatedExportsRoute: AuthenticatedExportsRoute,
+  AuthenticatedIdeasRoute: AuthenticatedIdeasRoute,
   AuthenticatedPitchRoute: AuthenticatedPitchRouteWithChildren,
   AuthenticatedProfileRoute: AuthenticatedProfileRoute,
   AuthenticatedRoadmapRoute: AuthenticatedRoadmapRoute,
@@ -349,13 +391,3 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { startInstance } from './start.ts'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-    config: Awaited<ReturnType<typeof startInstance.getOptions>>
-  }
-}

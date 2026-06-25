@@ -14,6 +14,8 @@ import {
   Presentation,
   Map,
   Download,
+  BarChart3,
+  Lightbulb,
 } from "lucide-react";
 import { useTheme } from "@/hooks/use-theme";
 import { useAuth } from "@/hooks/use-auth";
@@ -24,6 +26,8 @@ import { useState } from "react";
 const nav = [
   { to: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
   { to: "/projects", label: "Projects", icon: FolderKanban },
+  { to: "/ideas", label: "Idea Generator", icon: Lightbulb },
+  { to: "/analytics", label: "Analytics", icon: BarChart3 },
   { to: "/coach", label: "AI Co-Founder", icon: MessageSquare },
   { to: "/pitch", label: "Pitch Decks", icon: Presentation },
   { to: "/roadmap", label: "Roadmaps", icon: Map },
