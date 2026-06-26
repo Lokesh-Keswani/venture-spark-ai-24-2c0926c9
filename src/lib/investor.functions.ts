@@ -169,12 +169,12 @@ Generate 5-8 weaknesses and 5-8 concerns spread across categories.`;
       user_id: context.userId,
       score,
       confidence: parsed.confidence ?? "medium",
-      breakdown: parsed.breakdown as unknown as Record<string, unknown>,
-      concerns: parsed.concerns as unknown as Record<string, unknown>[],
-      weaknesses: parsed.weaknesses as unknown as Record<string, unknown>[],
-      improvements: parsed.improvements as unknown as Record<string, unknown>,
-      strengths: parsed.strengths as unknown as string[],
-      recommendations: parsed.fundraising_recommendations as unknown as string[],
+      breakdown: parsed.breakdown as unknown as Json,
+      concerns: parsed.concerns as unknown as Json,
+      weaknesses: parsed.weaknesses as unknown as Json,
+      improvements: parsed.improvements as unknown as Json,
+      strengths: parsed.strengths as unknown as Json,
+      recommendations: parsed.fundraising_recommendations as unknown as Json,
     };
 
     if (existing?.id) {
