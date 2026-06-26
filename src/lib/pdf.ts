@@ -975,7 +975,7 @@ export async function exportPitchPdf(title: string, slides: Slide[]): Promise<Bl
  * ============================================================ */
 export async function uploadExport(
   userId: string,
-  kind: "pitch" | "roadmap" | "report",
+  kind: "pitch" | "roadmap" | "report" | "investor",
   filename: string,
   blob: Blob,
 ): Promise<string> {
