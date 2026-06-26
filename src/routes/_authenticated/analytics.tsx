@@ -14,14 +14,6 @@ import {
 } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
-import {
   Area,
   AreaChart,
   Bar,
@@ -31,6 +23,7 @@ import {
   Tooltip,
   XAxis,
   YAxis,
+  LabelList,
 } from "recharts";
 import { Activity, ArrowRight, Sparkles, TrendingUp, Trophy } from "lucide-react";
 import { formatDistanceToNow, format } from "date-fns";
@@ -59,6 +52,18 @@ type Activity = {
   label: string;
   ref_id: string | null;
   created_at: string;
+};
+
+// Chart palette uses CSS custom properties directly (oklch). Avoid `hsl()` wrapper
+// since our tokens are not HSL — wrapping them yields invalid colors that render
+// black, killing chart visibility in dark mode.
+const C = {
+  primary: "var(--primary)",
+  border: "color-mix(in oklab, var(--foreground) 18%, transparent)",
+  grid: "color-mix(in oklab, var(--foreground) 12%, transparent)",
+  axis: "color-mix(in oklab, var(--foreground) 70%, transparent)",
+  tooltipBg: "var(--popover)",
+  tooltipText: "var(--popover-foreground)",
 };
 
 function AnalyticsPage() {
@@ -103,7 +108,6 @@ function AnalyticsPage() {
     [projects],
   );
 
-  // Trend series
   const trend = useMemo(
     () =>
       reports.map((r, i) => ({
@@ -115,7 +119,6 @@ function AnalyticsPage() {
     [reports, projectById],
   );
 
-  // Industry benchmarks: avg score grouped by industry
   const benchmarks = useMemo(() => {
     const buckets = new Map<string, { sum: number; n: number }>();
     for (const r of reports) {
@@ -127,7 +130,12 @@ function AnalyticsPage() {
       buckets.set(ind, b);
     }
     return Array.from(buckets.entries())
-      .map(([industry, b]) => ({ industry, avg: Math.round(b.sum / b.n), count: b.n }))
+      .map(([industry, b]) => ({
+        industry,
+        short: industry.length > 18 ? industry.slice(0, 16) + "…" : industry,
+        avg: Math.round(b.sum / b.n),
+        count: b.n,
+      }))
       .sort((a, b) => b.avg - a.avg)
       .slice(0, 8);
   }, [reports, projectById]);
@@ -147,80 +155,88 @@ function AnalyticsPage() {
 
   return (
     <div className="mx-auto box-border w-full min-w-0 max-w-6xl px-3 py-6 sm:px-6 sm:py-10">
-      <div className="flex flex-wrap items-end justify-between gap-3">
+      <div className="grid grid-cols-[minmax(0,1fr)_auto] items-end gap-3 sm:flex sm:flex-wrap sm:justify-between">
         <div className="min-w-0">
           <h1 className="font-display text-2xl font-semibold tracking-tight sm:text-3xl">
             Advanced analytics
           </h1>
           <p className="mt-1 text-sm text-muted-foreground">
-            Score trends, industry benchmarks, and your full activity stream.
+            Score trends, industry benchmarks, and your activity stream.
           </p>
         </div>
-        <Button asChild className="shadow-glow">
+        <Button asChild size="sm" className="shadow-glow sm:size-default">
           <Link to="/ideas">
-            <Sparkles className="mr-1.5 h-4 w-4" /> Generate ideas
+            <Sparkles className="mr-1.5 h-4 w-4" />
+            <span className="hidden xs:inline">Generate</span>
+            <span className="xs:hidden">Ideas</span>
+            <span className="ml-1 hidden sm:inline">ideas</span>
           </Link>
         </Button>
       </div>
 
       {/* KPI cards */}
       <div className="mt-6 grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4">
-        <KPI label="Avg startup score" value={isLoading ? "…" : `${avgScore}`} icon={TrendingUp} />
-        <KPI
-          label="Total analyses"
-          value={isLoading ? "…" : String(reports.length)}
-          icon={Activity}
-        />
-        <KPI
-          label="Best score"
-          value={isLoading ? "…" : best ? `${best.score ?? 0}` : "—"}
-          icon={Trophy}
-        />
-        <KPI
-          label="Trend delta"
-          value={isLoading ? "…" : `${delta >= 0 ? "+" : ""}${delta}`}
-          icon={TrendingUp}
-        />
+        <KPI label="Avg score" value={isLoading ? "…" : `${avgScore}`} icon={TrendingUp} />
+        <KPI label="Analyses" value={isLoading ? "…" : String(reports.length)} icon={Activity} />
+        <KPI label="Best score" value={isLoading ? "…" : best ? `${best.score ?? 0}` : "—"} icon={Trophy} />
+        <KPI label="Trend delta" value={isLoading ? "…" : `${delta >= 0 ? "+" : ""}${delta}`} icon={TrendingUp} />
       </div>
 
       {/* Score trend */}
-      <Card className="mt-6 border-border/60 bg-card/60 backdrop-blur">
+      <Card className="mt-6 min-w-0 max-w-full overflow-hidden border-border/60 bg-card/60 backdrop-blur">
         <CardHeader>
           <CardTitle className="text-base">Startup score trend</CardTitle>
-          <CardDescription>
-            Every analysis you've run, in chronological order.
-          </CardDescription>
+          <CardDescription>Every analysis you've run, in chronological order.</CardDescription>
         </CardHeader>
-        <CardContent>
+        <CardContent className="min-w-0 px-2 sm:px-6">
           {trend.length === 0 ? (
             <EmptyState label="Run your first analysis to see the trend." />
           ) : (
-            <div className="h-[260px] w-full">
+            <div className="h-[260px] w-full min-w-0">
               <ResponsiveContainer width="100%" height="100%">
-                <AreaChart data={trend} margin={{ left: -20, right: 8, top: 8, bottom: 0 }}>
+                <AreaChart data={trend} margin={{ left: 0, right: 12, top: 8, bottom: 0 }}>
                   <defs>
                     <linearGradient id="scoreGrad" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="0%" stopColor="hsl(var(--primary))" stopOpacity={0.35} />
-                      <stop offset="100%" stopColor="hsl(var(--primary))" stopOpacity={0} />
+                      <stop offset="0%" stopColor={C.primary} stopOpacity={0.55} />
+                      <stop offset="100%" stopColor={C.primary} stopOpacity={0.04} />
                     </linearGradient>
                   </defs>
-                  <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
-                  <XAxis dataKey="date" tick={{ fontSize: 11 }} stroke="hsl(var(--muted-foreground))" />
-                  <YAxis domain={[0, 100]} tick={{ fontSize: 11 }} stroke="hsl(var(--muted-foreground))" />
+                  <CartesianGrid strokeDasharray="3 3" stroke={C.grid} vertical={false} />
+                  <XAxis
+                    dataKey="date"
+                    tick={{ fontSize: 11, fill: C.axis }}
+                    stroke={C.border}
+                    tickLine={false}
+                    axisLine={false}
+                  />
+                  <YAxis
+                    domain={[0, 100]}
+                    tick={{ fontSize: 11, fill: C.axis }}
+                    stroke={C.border}
+                    tickLine={false}
+                    axisLine={false}
+                    width={32}
+                  />
                   <Tooltip
+                    cursor={{ stroke: C.primary, strokeOpacity: 0.3 }}
                     contentStyle={{
-                      background: "hsl(var(--popover))",
-                      border: "1px solid hsl(var(--border))",
-                      borderRadius: 8,
+                      background: C.tooltipBg,
+                      color: C.tooltipText,
+                      border: `1px solid ${C.border}`,
+                      borderRadius: 10,
                       fontSize: 12,
+                      boxShadow: "0 8px 24px -8px rgba(0,0,0,0.25)",
                     }}
+                    labelStyle={{ color: C.tooltipText }}
                   />
                   <Area
                     type="monotone"
                     dataKey="score"
-                    stroke="hsl(var(--primary))"
-                    strokeWidth={2}
+                    stroke={C.primary}
+                    strokeWidth={2.5}
                     fill="url(#scoreGrad)"
+                    dot={{ r: 3, fill: C.primary, strokeWidth: 0 }}
+                    activeDot={{ r: 5, fill: C.primary, stroke: C.tooltipBg, strokeWidth: 2 }}
                   />
                 </AreaChart>
               </ResponsiveContainer>
@@ -229,40 +245,60 @@ function AnalyticsPage() {
         </CardContent>
       </Card>
 
-      {/* Benchmarks + Activity */}
       <div className="mt-4 grid gap-4 lg:grid-cols-5">
-        <Card className="border-border/60 bg-card/60 backdrop-blur lg:col-span-3">
+        {/* Industry benchmarks – horizontal bars handle long labels cleanly */}
+        <Card className="min-w-0 max-w-full overflow-hidden border-border/60 bg-card/60 backdrop-blur lg:col-span-3">
           <CardHeader>
             <CardTitle className="text-base">Industry benchmarks</CardTitle>
             <CardDescription>Average score per industry across your portfolio.</CardDescription>
           </CardHeader>
-          <CardContent>
+          <CardContent className="min-w-0 px-2 sm:px-6">
             {benchmarks.length === 0 ? (
               <EmptyState label="No industry data yet." />
             ) : (
-              <div className="h-[260px] w-full">
+              <div
+                className="w-full min-w-0"
+                style={{ height: Math.max(180, benchmarks.length * 44 + 24) }}
+              >
                 <ResponsiveContainer width="100%" height="100%">
-                  <BarChart data={benchmarks} margin={{ left: -20, right: 8, top: 8, bottom: 0 }}>
-                    <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+                  <BarChart
+                    data={benchmarks}
+                    layout="vertical"
+                    margin={{ left: 4, right: 36, top: 4, bottom: 4 }}
+                  >
+                    <CartesianGrid strokeDasharray="3 3" stroke={C.grid} horizontal={false} />
                     <XAxis
-                      dataKey="industry"
-                      tick={{ fontSize: 11 }}
-                      stroke="hsl(var(--muted-foreground))"
-                      interval={0}
-                      angle={-15}
-                      textAnchor="end"
-                      height={50}
+                      type="number"
+                      domain={[0, 100]}
+                      tick={{ fontSize: 11, fill: C.axis }}
+                      tickLine={false}
+                      axisLine={false}
                     />
-                    <YAxis domain={[0, 100]} tick={{ fontSize: 11 }} stroke="hsl(var(--muted-foreground))" />
+                    <YAxis
+                      type="category"
+                      dataKey="short"
+                      tick={{ fontSize: 11, fill: C.axis }}
+                      tickLine={false}
+                      axisLine={false}
+                      width={108}
+                    />
                     <Tooltip
+                      cursor={{ fill: C.primary, fillOpacity: 0.08 }}
                       contentStyle={{
-                        background: "hsl(var(--popover))",
-                        border: "1px solid hsl(var(--border))",
-                        borderRadius: 8,
+                        background: C.tooltipBg,
+                        color: C.tooltipText,
+                        border: `1px solid ${C.border}`,
+                        borderRadius: 10,
                         fontSize: 12,
                       }}
                     />
-                    <Bar dataKey="avg" radius={[6, 6, 0, 0]} fill="hsl(var(--primary))" />
+                    <Bar dataKey="avg" radius={[0, 6, 6, 0]} fill={C.primary}>
+                      <LabelList
+                        dataKey="avg"
+                        position="right"
+                        style={{ fill: C.axis, fontSize: 11 }}
+                      />
+                    </Bar>
                   </BarChart>
                 </ResponsiveContainer>
               </div>
@@ -270,7 +306,7 @@ function AnalyticsPage() {
           </CardContent>
         </Card>
 
-        <Card className="border-border/60 bg-card/60 backdrop-blur lg:col-span-2">
+        <Card className="min-w-0 max-w-full overflow-hidden border-border/60 bg-card/60 backdrop-blur lg:col-span-2">
           <CardHeader>
             <CardTitle className="text-base">Recent activity</CardTitle>
             <CardDescription>Your latest actions across the platform.</CardDescription>
@@ -282,13 +318,13 @@ function AnalyticsPage() {
               activity.slice(0, 8).map((a) => (
                 <div
                   key={a.id}
-                  className="flex items-start justify-between gap-3 rounded-md border border-border/40 bg-background/60 px-3 py-2"
+                  className="grid min-w-0 grid-cols-[minmax(0,1fr)_auto] items-start gap-3 rounded-md border border-border/40 bg-background/60 px-3 py-2"
                 >
                   <div className="min-w-0">
-                    <p className="truncate text-sm font-medium">{a.label}</p>
-                    <p className="text-xs text-muted-foreground">{a.kind}</p>
+                    <p className="break-words text-sm font-medium leading-snug">{a.label}</p>
+                    <p className="mt-0.5 text-xs text-muted-foreground">{a.kind}</p>
                   </div>
-                  <span className="shrink-0 text-xs text-muted-foreground">
+                  <span className="shrink-0 whitespace-nowrap text-xs text-muted-foreground">
                     {formatDistanceToNow(new Date(a.created_at), { addSuffix: true })}
                   </span>
                 </div>
@@ -298,59 +334,104 @@ function AnalyticsPage() {
         </Card>
       </div>
 
-      {/* Analysis history */}
-      <Card className="mt-4 border-border/60 bg-card/60 backdrop-blur">
+      {/* Analysis history — responsive list (cards on mobile, table on md+) */}
+      <Card className="mt-4 min-w-0 max-w-full overflow-hidden border-border/60 bg-card/60 backdrop-blur">
         <CardHeader>
           <CardTitle className="text-base">Analysis history</CardTitle>
           <CardDescription>Every report you've generated.</CardDescription>
         </CardHeader>
-        <CardContent>
+        <CardContent className="min-w-0">
           {reports.length === 0 ? (
             <EmptyState label="No analyses yet." />
           ) : (
-            <div className="overflow-x-auto">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Startup</TableHead>
-                    <TableHead>Industry</TableHead>
-                    <TableHead>Score</TableHead>
-                    <TableHead className="hidden sm:table-cell">When</TableHead>
-                    <TableHead className="text-right">Open</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {[...reports].reverse().map((r) => {
-                    const p = projectById[r.project_id];
-                    return (
-                      <TableRow key={r.id}>
-                        <TableCell className="font-medium">
+            <>
+              {/* Mobile: card list */}
+              <ul className="space-y-2 md:hidden">
+                {[...reports].reverse().map((r) => {
+                  const p = projectById[r.project_id];
+                  return (
+                    <li
+                      key={r.id}
+                      className="grid min-w-0 grid-cols-[minmax(0,1fr)_auto] items-center gap-3 rounded-lg border border-border/40 bg-background/60 px-3 py-2.5"
+                    >
+                      <div className="min-w-0">
+                        <p className="truncate text-sm font-medium">
                           {p?.startup_name ?? "Untitled"}
-                        </TableCell>
-                        <TableCell>
-                          <Badge variant="secondary">{p?.industry ?? "—"}</Badge>
-                        </TableCell>
-                        <TableCell>
-                          <ScorePill score={r.score ?? 0} />
-                        </TableCell>
-                        <TableCell className="hidden text-muted-foreground sm:table-cell">
-                          {formatDistanceToNow(new Date(r.created_at), { addSuffix: true })}
-                        </TableCell>
-                        <TableCell className="text-right">
-                          {p && (
-                            <Button asChild size="sm" variant="ghost">
-                              <Link to="/projects/$id" params={{ id: p.id }}>
-                                View <ArrowRight className="ml-1 h-3 w-3" />
-                              </Link>
-                            </Button>
-                          )}
-                        </TableCell>
-                      </TableRow>
-                    );
-                  })}
-                </TableBody>
-              </Table>
-            </div>
+                        </p>
+                        <div className="mt-1 flex flex-wrap items-center gap-1.5">
+                          <Badge variant="secondary" className="max-w-[160px] truncate">
+                            {p?.industry ?? "—"}
+                          </Badge>
+                          <span className="text-[11px] text-muted-foreground">
+                            {formatDistanceToNow(new Date(r.created_at), { addSuffix: true })}
+                          </span>
+                        </div>
+                      </div>
+                      <div className="flex shrink-0 items-center gap-2">
+                        <ScorePill score={r.score ?? 0} />
+                        {p && (
+                          <Button asChild size="icon" variant="ghost" aria-label="Open">
+                            <Link to="/projects/$id" params={{ id: p.id }}>
+                              <ArrowRight className="h-4 w-4" />
+                            </Link>
+                          </Button>
+                        )}
+                      </div>
+                    </li>
+                  );
+                })}
+              </ul>
+
+              {/* Desktop: real table */}
+              <div className="hidden md:block">
+                <table className="w-full table-fixed border-collapse text-sm">
+                  <colgroup>
+                    <col />
+                    <col style={{ width: "28%" }} />
+                    <col style={{ width: "90px" }} />
+                    <col style={{ width: "150px" }} />
+                    <col style={{ width: "80px" }} />
+                  </colgroup>
+                  <thead>
+                    <tr className="border-b border-border/60 text-left text-xs text-muted-foreground">
+                      <th className="px-3 py-2 font-medium">Startup</th>
+                      <th className="px-3 py-2 font-medium">Industry</th>
+                      <th className="px-3 py-2 font-medium">Score</th>
+                      <th className="px-3 py-2 font-medium">When</th>
+                      <th className="px-3 py-2 text-right font-medium">Open</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {[...reports].reverse().map((r) => {
+                      const p = projectById[r.project_id];
+                      return (
+                        <tr key={r.id} className="border-b border-border/30 last:border-0">
+                          <td className="truncate px-3 py-2 font-medium">{p?.startup_name ?? "Untitled"}</td>
+                          <td className="px-3 py-2">
+                            <Badge variant="secondary" className="max-w-full truncate">
+                              {p?.industry ?? "—"}
+                            </Badge>
+                          </td>
+                          <td className="px-3 py-2"><ScorePill score={r.score ?? 0} /></td>
+                          <td className="truncate px-3 py-2 text-muted-foreground">
+                            {formatDistanceToNow(new Date(r.created_at), { addSuffix: true })}
+                          </td>
+                          <td className="px-3 py-2 text-right">
+                            {p && (
+                              <Button asChild size="sm" variant="ghost">
+                                <Link to="/projects/$id" params={{ id: p.id }}>
+                                  View <ArrowRight className="ml-1 h-3 w-3" />
+                                </Link>
+                              </Button>
+                            )}
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
+            </>
           )}
         </CardContent>
       </Card>
@@ -368,13 +449,13 @@ function KPI({
   icon: React.ComponentType<{ className?: string }>;
 }) {
   return (
-    <Card className="border-border/60 bg-card/60 backdrop-blur transition-shadow hover:shadow-glow">
-      <CardContent className="flex items-center gap-3 p-4">
-        <span className="inline-flex h-9 w-9 items-center justify-center rounded-md bg-primary/10 text-primary">
+    <Card className="min-w-0 border-border/60 bg-card/60 backdrop-blur transition-all hover:-translate-y-0.5 hover:shadow-glow">
+      <CardContent className="flex min-w-0 items-center gap-3 p-4">
+        <span className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-md bg-primary/10 text-primary">
           <Icon className="h-4 w-4" />
         </span>
         <div className="min-w-0">
-          <p className="text-xs text-muted-foreground">{label}</p>
+          <p className="truncate text-xs text-muted-foreground">{label}</p>
           <p className="truncate text-lg font-semibold">{value}</p>
         </div>
       </CardContent>
