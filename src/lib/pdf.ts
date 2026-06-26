@@ -998,3 +998,232 @@ export function downloadBlob(blob: Blob, filename: string) {
   a.remove();
   URL.revokeObjectURL(url);
 }
+
+/* ============================================================
+ * INVESTOR READINESS REPORT
+ * ============================================================ */
+function sevColor(sev: string): RGB {
+  if (sev === "critical") return [180, 50, 60];
+  if (sev === "high") return T.warn;
+  if (sev === "medium") return [217, 158, 76];
+  return T.inkSoft;
+}
+
+function pill(c: Cursor, x: number, y: number, label: string, color: RGB) {
+  const padX = 6;
+  c.doc.setFont("helvetica", "bold");
+  c.doc.setFontSize(7.5);
+  const w = c.doc.getTextWidth(label) + padX * 2;
+  setFill(c.doc, color);
+  c.doc.roundedRect(x, y - 9, w, 13, 6, 6, "F");
+  setText(c.doc, [255, 255, 255]);
+  c.doc.text(label, x + padX, y);
+  return w;
+}
+
+function breakdownGrid(c: Cursor, br: Record<string, number> | undefined) {
+  if (!br) return;
+  const entries = Object.entries(br);
+  const cols = 2;
+  const gap = 12;
+  const cellW = (c.contentW - gap) / cols;
+  const cellH = 38;
+  entries.forEach((entry, i) => {
+    const [k, v] = entry;
+    const col = i % cols;
+    const row = Math.floor(i / cols);
+    if (col === 0) c.ensure(cellH + 6);
+    const x = c.margin + col * (cellW + gap);
+    const y = c.y + row * (cellH + 8);
+    setFill(c.doc, T.surface);
+    setStroke(c.doc, T.border);
+    c.doc.setLineWidth(0.5);
+    c.doc.roundedRect(x, y, cellW, cellH, 8, 8, "FD");
+    setText(c.doc, T.inkSoft);
+    c.doc.setFont("helvetica", "bold");
+    c.doc.setFontSize(8);
+    c.doc.text(k.replace(/_/g, " ").toUpperCase(), x + 12, y + 14);
+    setText(c.doc, T.ink);
+    c.doc.setFont("helvetica", "bold");
+    c.doc.setFontSize(16);
+    c.doc.text(String(Math.round(v ?? 0)), x + 12, y + 30);
+    // bar
+    setFill(c.doc, T.primarySoft);
+    c.doc.roundedRect(x + 60, y + 22, cellW - 72, 5, 2.5, 2.5, "F");
+    setFill(c.doc, T.primary);
+    const pw = Math.max(0, Math.min(1, (v ?? 0) / 100)) * (cellW - 72);
+    if (pw > 0) c.doc.roundedRect(x + 60, y + 22, pw, 5, 2.5, 2.5, "F");
+  });
+  const rows = Math.ceil(entries.length / cols);
+  c.y += rows * (cellH + 8) + 4;
+}
+
+export async function exportInvestorPdf(
+  name: string,
+  r: InvestorReadiness,
+): Promise<Blob> {
+  const doc = makeDoc("portrait");
+  const tier =
+    r.score >= 71 ? "Investor Ready" : r.score >= 41 ? "Moderate Readiness" : "High Risk";
+  drawCover(doc, {
+    brand: "VentureIQ AI",
+    documentType: "Investor Readiness Report",
+    title: name,
+    subtitle: `Funding readiness assessment · ${tier}.`,
+    accent: `Readiness ${r.score}/100`,
+  });
+
+  doc.addPage();
+  const c = new Cursor(doc, { brand: "VentureIQ AI", project: name, section: "Investor Readiness" });
+
+  drawTOC(c, [
+    "Funding Readiness Score",
+    "Strengths",
+    "Score Breakdown",
+    "Potential Investor Concerns",
+    "Weakness Analysis",
+    "Recommended Improvements",
+    "Fundraising Recommendations",
+  ]);
+
+  c.newPage();
+  eyebrow(c, "01 · Readiness");
+  h1(c, "Funding readiness score");
+  roundedCard(c, 150, (x, y, w, h) => {
+    drawDonut(doc, x + 70, y + h / 2, 56, r.score ?? 0, T.primary);
+    setText(doc, T.ink);
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(18);
+    doc.text(tier, x + 150, y + 36);
+    setText(doc, T.inkSoft);
+    doc.setFont("helvetica", "normal");
+    doc.setFontSize(10.5);
+    const lines = doc.splitTextToSize(
+      `Confidence: ${r.confidence ?? "medium"}. Composite assessment across market, product, team, business model, and investor appeal.`,
+      w - 160,
+    );
+    doc.text(lines, x + 150, y + 56);
+  });
+
+  c.newPage();
+  eyebrow(c, "02 · Strengths");
+  h1(c, "What investors will like");
+  bulletList(c, r.strengths, "ok");
+
+  c.newPage();
+  eyebrow(c, "03 · Breakdown");
+  h1(c, "Score breakdown");
+  breakdownGrid(c, r.breakdown as unknown as Record<string, number>);
+
+  c.newPage();
+  eyebrow(c, "04 · Concerns");
+  h1(c, "Potential investor concerns");
+  (r.concerns ?? []).forEach((cn) => {
+    const titleLines = c.doc.splitTextToSize(cn.title, c.contentW - 100);
+    const expLines = c.doc.splitTextToSize(cn.explanation, c.contentW - 28);
+    const whyLines = c.doc.splitTextToSize(`Why investors push back: ${cn.why_investors_reject}`, c.contentW - 28);
+    const solLines = c.doc.splitTextToSize(`Solution: ${cn.suggested_solution}`, c.contentW - 28);
+    const cardH = 28 + titleLines.length * 14 + expLines.length * 12 + whyLines.length * 12 + solLines.length * 12 + 18;
+    c.ensure(cardH + 8);
+    setFill(c.doc, T.surface);
+    setStroke(c.doc, T.border);
+    c.doc.setLineWidth(0.5);
+    c.doc.roundedRect(c.margin, c.y, c.contentW, cardH, 10, 10, "FD");
+    setFill(c.doc, sevColor(cn.severity));
+    c.doc.rect(c.margin, c.y, 4, cardH, "F");
+    setText(c.doc, T.ink);
+    c.doc.setFont("helvetica", "bold");
+    c.doc.setFontSize(12);
+    c.doc.text(titleLines, c.margin + 14, c.y + 18);
+    pill(c, c.margin + c.contentW - 90, c.y + 16, cn.severity.toUpperCase(), sevColor(cn.severity));
+    let yy = c.y + 18 + titleLines.length * 14 + 4;
+    setText(c.doc, T.inkSoft);
+    c.doc.setFont("helvetica", "bold");
+    c.doc.setFontSize(8);
+    c.doc.text(cn.category.toUpperCase(), c.margin + 14, yy);
+    yy += 12;
+    setText(c.doc, T.ink);
+    c.doc.setFont("helvetica", "normal");
+    c.doc.setFontSize(10);
+    c.doc.text(expLines, c.margin + 14, yy);
+    yy += expLines.length * 12 + 2;
+    setText(c.doc, T.warn);
+    c.doc.text(whyLines, c.margin + 14, yy);
+    yy += whyLines.length * 12 + 2;
+    setText(c.doc, T.ok);
+    c.doc.text(solLines, c.margin + 14, yy);
+    c.y += cardH + 8;
+  });
+
+  c.newPage();
+  eyebrow(c, "05 · Weaknesses");
+  h1(c, "Weakness analysis");
+  (r.weaknesses ?? []).forEach((w) => {
+    const descLines = c.doc.splitTextToSize(w.description, c.contentW - 28);
+    const fixLines = c.doc.splitTextToSize(`Fix: ${w.fix}`, c.contentW - 28);
+    const cardH = 28 + descLines.length * 12 + fixLines.length * 12 + 14;
+    c.ensure(cardH + 8);
+    setFill(c.doc, T.surface);
+    setStroke(c.doc, T.border);
+    c.doc.setLineWidth(0.5);
+    c.doc.roundedRect(c.margin, c.y, c.contentW, cardH, 10, 10, "FD");
+    setText(c.doc, T.ink);
+    c.doc.setFont("helvetica", "bold");
+    c.doc.setFontSize(11);
+    c.doc.text(w.area, c.margin + 14, c.y + 16);
+    pill(c, c.margin + c.contentW - 140, c.y + 14, `IMPACT ${w.impact.toUpperCase()}`, sevColor(w.impact));
+    pill(c, c.margin + c.contentW - 70, c.y + 14, `PRIO ${w.priority.toUpperCase()}`, T.primary);
+    let yy = c.y + 32;
+    setText(c.doc, T.ink);
+    c.doc.setFont("helvetica", "normal");
+    c.doc.setFontSize(10);
+    c.doc.text(descLines, c.margin + 14, yy);
+    yy += descLines.length * 12 + 2;
+    setText(c.doc, T.ok);
+    c.doc.text(fixLines, c.margin + 14, yy);
+    c.y += cardH + 6;
+  });
+
+  c.newPage();
+  eyebrow(c, "06 · Improvements");
+  h1(c, "Recommended improvement plan");
+  const phases: { label: string; items: InvestorReadiness["improvements"]["immediate"] }[] = [
+    { label: "Immediate actions", items: r.improvements?.immediate ?? [] },
+    { label: "Next 30 days", items: r.improvements?.next_30_days ?? [] },
+    { label: "Next 90 days", items: r.improvements?.next_90_days ?? [] },
+    { label: "Before fundraising", items: r.improvements?.before_fundraising ?? [] },
+  ];
+  phases.forEach((ph) => {
+    if (!ph.items?.length) return;
+    h3(c, ph.label);
+    ph.items.forEach((it) => {
+      const recLines = c.doc.splitTextToSize(it.recommendation, c.contentW - 28);
+      const probLines = c.doc.splitTextToSize(it.problem, c.contentW - 28);
+      const cardH = 30 + probLines.length * 12 + recLines.length * 12 + 20;
+      c.ensure(cardH + 8);
+      setFill(c.doc, T.primarySoft);
+      c.doc.roundedRect(c.margin, c.y, c.contentW, cardH, 8, 8, "F");
+      setText(c.doc, T.primaryDeep);
+      c.doc.setFont("helvetica", "bold");
+      c.doc.setFontSize(8);
+      c.doc.text(`${it.difficulty.toUpperCase()} · ${it.time_required} · IMPACT ${it.estimated_impact}`, c.margin + 12, c.y + 14);
+      setText(c.doc, T.ink);
+      c.doc.setFont("helvetica", "bold");
+      c.doc.setFontSize(10.5);
+      c.doc.text(probLines, c.margin + 12, c.y + 30);
+      setText(c.doc, T.ink);
+      c.doc.setFont("helvetica", "normal");
+      c.doc.setFontSize(10);
+      c.doc.text(recLines, c.margin + 12, c.y + 30 + probLines.length * 12 + 4);
+      c.y += cardH + 6;
+    });
+  });
+
+  c.newPage();
+  eyebrow(c, "07 · Fundraising");
+  h1(c, "Fundraising recommendations");
+  bulletList(c, r.recommendations, "ok");
+
+  c.finish();
+  return doc.output("blob");
+}
