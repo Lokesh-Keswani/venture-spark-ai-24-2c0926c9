@@ -71,7 +71,7 @@ function WorkspaceDetail() {
       const [{ data: members }, { data: invites }, { data: activity }] = await Promise.all([
         supabase
           .from("workspace_members")
-          .select("id, role, user_id, created_at, profile:profiles(full_name, email, avatar_url)")
+          .select("id, role, user_id, created_at")
           .eq("workspace_id", ws.id)
           .order("created_at", { ascending: true }),
         supabase
@@ -81,13 +81,41 @@ function WorkspaceDetail() {
           .order("created_at", { ascending: false }),
         supabase
           .from("workspace_activity")
-          .select("id, action, target, created_at, user:profiles(full_name, email)")
+          .select("id, user_id, action, target, created_at")
           .eq("workspace_id", ws.id)
           .order("created_at", { ascending: false })
           .limit(20),
       ]);
 
-      return { ws, members: members ?? [], invites: invites ?? [], activity: activity ?? [] };
+      const userIds = Array.from(
+        new Set([
+          ...(members ?? []).map((m) => m.user_id),
+          ...(activity ?? []).map((a) => a.user_id),
+        ]),
+      );
+      const { data: profiles } = userIds.length
+        ? await supabase
+            .from("profiles")
+            .select("id, full_name, email, avatar_url")
+            .in("id", userIds)
+        : { data: [] as { id: string; full_name: string | null; email: string | null; avatar_url: string | null }[] };
+      const profileMap = new Map((profiles ?? []).map((p) => [p.id, p]));
+
+      const membersWithProfile = (members ?? []).map((m) => ({
+        ...m,
+        profile: profileMap.get(m.user_id) ?? null,
+      }));
+      const activityWithProfile = (activity ?? []).map((a) => ({
+        ...a,
+        user: profileMap.get(a.user_id) ?? null,
+      }));
+
+      return {
+        ws,
+        members: membersWithProfile,
+        invites: invites ?? [],
+        activity: activityWithProfile,
+      };
     },
   });
 
