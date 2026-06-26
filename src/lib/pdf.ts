@@ -5,6 +5,7 @@ import { supabase } from "@/integrations/supabase/client";
 import type { Slide } from "@/lib/pitch.functions";
 import type { RoadmapPlan, Milestone } from "@/lib/roadmap.functions";
 import type { DeepAnalysis } from "@/lib/analyze.functions";
+import type { InvestorReadiness } from "@/lib/investor.functions";
 
 /* ============================================================
  * Theme — Calm Pinkish (matches the app)
