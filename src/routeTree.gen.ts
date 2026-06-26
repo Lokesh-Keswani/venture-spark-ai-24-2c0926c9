@@ -12,19 +12,24 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as AuthenticatedTeamRouteImport } from './routes/_authenticated/team'
 import { Route as AuthenticatedSettingsRouteImport } from './routes/_authenticated/settings'
 import { Route as AuthenticatedRoadmapRouteImport } from './routes/_authenticated/roadmap'
 import { Route as AuthenticatedProfileRouteImport } from './routes/_authenticated/profile'
 import { Route as AuthenticatedPitchRouteImport } from './routes/_authenticated/pitch'
+import { Route as AuthenticatedInvestorRouteImport } from './routes/_authenticated/investor'
 import { Route as AuthenticatedIdeasRouteImport } from './routes/_authenticated/ideas'
 import { Route as AuthenticatedExportsRouteImport } from './routes/_authenticated/exports'
 import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
 import { Route as AuthenticatedCoachRouteImport } from './routes/_authenticated/coach'
 import { Route as AuthenticatedAnalyticsRouteImport } from './routes/_authenticated/analytics'
 import { Route as AuthenticatedProjectsIndexRouteImport } from './routes/_authenticated/projects.index'
+import { Route as AuthenticatedTeamSlugRouteImport } from './routes/_authenticated/team.$slug'
 import { Route as AuthenticatedProjectsNewRouteImport } from './routes/_authenticated/projects.new'
 import { Route as AuthenticatedProjectsIdRouteImport } from './routes/_authenticated/projects.$id'
 import { Route as AuthenticatedPitchIdRouteImport } from './routes/_authenticated/pitch.$id'
+import { Route as AuthenticatedInviteTokenRouteImport } from './routes/_authenticated/invite.$token'
+import { Route as AuthenticatedInvestorIdRouteImport } from './routes/_authenticated/investor.$id'
 
 const AuthRoute = AuthRouteImport.update({
   id: '/auth',
@@ -39,6 +44,11 @@ const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => rootRouteImport,
+} as any)
+const AuthenticatedTeamRoute = AuthenticatedTeamRouteImport.update({
+  id: '/team',
+  path: '/team',
+  getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
 const AuthenticatedSettingsRoute = AuthenticatedSettingsRouteImport.update({
   id: '/settings',
@@ -58,6 +68,11 @@ const AuthenticatedProfileRoute = AuthenticatedProfileRouteImport.update({
 const AuthenticatedPitchRoute = AuthenticatedPitchRouteImport.update({
   id: '/pitch',
   path: '/pitch',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedInvestorRoute = AuthenticatedInvestorRouteImport.update({
+  id: '/investor',
+  path: '/investor',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
 const AuthenticatedIdeasRoute = AuthenticatedIdeasRouteImport.update({
@@ -91,6 +106,11 @@ const AuthenticatedProjectsIndexRoute =
     path: '/projects/',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
+const AuthenticatedTeamSlugRoute = AuthenticatedTeamSlugRouteImport.update({
+  id: '/$slug',
+  path: '/$slug',
+  getParentRoute: () => AuthenticatedTeamRoute,
+} as any)
 const AuthenticatedProjectsNewRoute =
   AuthenticatedProjectsNewRouteImport.update({
     id: '/projects/new',
@@ -107,6 +127,17 @@ const AuthenticatedPitchIdRoute = AuthenticatedPitchIdRouteImport.update({
   path: '/$id',
   getParentRoute: () => AuthenticatedPitchRoute,
 } as any)
+const AuthenticatedInviteTokenRoute =
+  AuthenticatedInviteTokenRouteImport.update({
+    id: '/invite/$token',
+    path: '/invite/$token',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedInvestorIdRoute = AuthenticatedInvestorIdRouteImport.update({
+  id: '/$id',
+  path: '/$id',
+  getParentRoute: () => AuthenticatedInvestorRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -116,13 +147,18 @@ export interface FileRoutesByFullPath {
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/exports': typeof AuthenticatedExportsRoute
   '/ideas': typeof AuthenticatedIdeasRoute
+  '/investor': typeof AuthenticatedInvestorRouteWithChildren
   '/pitch': typeof AuthenticatedPitchRouteWithChildren
   '/profile': typeof AuthenticatedProfileRoute
   '/roadmap': typeof AuthenticatedRoadmapRoute
   '/settings': typeof AuthenticatedSettingsRoute
+  '/team': typeof AuthenticatedTeamRouteWithChildren
+  '/investor/$id': typeof AuthenticatedInvestorIdRoute
+  '/invite/$token': typeof AuthenticatedInviteTokenRoute
   '/pitch/$id': typeof AuthenticatedPitchIdRoute
   '/projects/$id': typeof AuthenticatedProjectsIdRoute
   '/projects/new': typeof AuthenticatedProjectsNewRoute
+  '/team/$slug': typeof AuthenticatedTeamSlugRoute
   '/projects/': typeof AuthenticatedProjectsIndexRoute
 }
 export interface FileRoutesByTo {
@@ -133,13 +169,18 @@ export interface FileRoutesByTo {
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/exports': typeof AuthenticatedExportsRoute
   '/ideas': typeof AuthenticatedIdeasRoute
+  '/investor': typeof AuthenticatedInvestorRouteWithChildren
   '/pitch': typeof AuthenticatedPitchRouteWithChildren
   '/profile': typeof AuthenticatedProfileRoute
   '/roadmap': typeof AuthenticatedRoadmapRoute
   '/settings': typeof AuthenticatedSettingsRoute
+  '/team': typeof AuthenticatedTeamRouteWithChildren
+  '/investor/$id': typeof AuthenticatedInvestorIdRoute
+  '/invite/$token': typeof AuthenticatedInviteTokenRoute
   '/pitch/$id': typeof AuthenticatedPitchIdRoute
   '/projects/$id': typeof AuthenticatedProjectsIdRoute
   '/projects/new': typeof AuthenticatedProjectsNewRoute
+  '/team/$slug': typeof AuthenticatedTeamSlugRoute
   '/projects': typeof AuthenticatedProjectsIndexRoute
 }
 export interface FileRoutesById {
@@ -152,13 +193,18 @@ export interface FileRoutesById {
   '/_authenticated/dashboard': typeof AuthenticatedDashboardRoute
   '/_authenticated/exports': typeof AuthenticatedExportsRoute
   '/_authenticated/ideas': typeof AuthenticatedIdeasRoute
+  '/_authenticated/investor': typeof AuthenticatedInvestorRouteWithChildren
   '/_authenticated/pitch': typeof AuthenticatedPitchRouteWithChildren
   '/_authenticated/profile': typeof AuthenticatedProfileRoute
   '/_authenticated/roadmap': typeof AuthenticatedRoadmapRoute
   '/_authenticated/settings': typeof AuthenticatedSettingsRoute
+  '/_authenticated/team': typeof AuthenticatedTeamRouteWithChildren
+  '/_authenticated/investor/$id': typeof AuthenticatedInvestorIdRoute
+  '/_authenticated/invite/$token': typeof AuthenticatedInviteTokenRoute
   '/_authenticated/pitch/$id': typeof AuthenticatedPitchIdRoute
   '/_authenticated/projects/$id': typeof AuthenticatedProjectsIdRoute
   '/_authenticated/projects/new': typeof AuthenticatedProjectsNewRoute
+  '/_authenticated/team/$slug': typeof AuthenticatedTeamSlugRoute
   '/_authenticated/projects/': typeof AuthenticatedProjectsIndexRoute
 }
 export interface FileRouteTypes {
@@ -171,13 +217,18 @@ export interface FileRouteTypes {
     | '/dashboard'
     | '/exports'
     | '/ideas'
+    | '/investor'
     | '/pitch'
     | '/profile'
     | '/roadmap'
     | '/settings'
+    | '/team'
+    | '/investor/$id'
+    | '/invite/$token'
     | '/pitch/$id'
     | '/projects/$id'
     | '/projects/new'
+    | '/team/$slug'
     | '/projects/'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -188,13 +239,18 @@ export interface FileRouteTypes {
     | '/dashboard'
     | '/exports'
     | '/ideas'
+    | '/investor'
     | '/pitch'
     | '/profile'
     | '/roadmap'
     | '/settings'
+    | '/team'
+    | '/investor/$id'
+    | '/invite/$token'
     | '/pitch/$id'
     | '/projects/$id'
     | '/projects/new'
+    | '/team/$slug'
     | '/projects'
   id:
     | '__root__'
@@ -206,13 +262,18 @@ export interface FileRouteTypes {
     | '/_authenticated/dashboard'
     | '/_authenticated/exports'
     | '/_authenticated/ideas'
+    | '/_authenticated/investor'
     | '/_authenticated/pitch'
     | '/_authenticated/profile'
     | '/_authenticated/roadmap'
     | '/_authenticated/settings'
+    | '/_authenticated/team'
+    | '/_authenticated/investor/$id'
+    | '/_authenticated/invite/$token'
     | '/_authenticated/pitch/$id'
     | '/_authenticated/projects/$id'
     | '/_authenticated/projects/new'
+    | '/_authenticated/team/$slug'
     | '/_authenticated/projects/'
   fileRoutesById: FileRoutesById
 }
@@ -245,6 +306,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/_authenticated/team': {
+      id: '/_authenticated/team'
+      path: '/team'
+      fullPath: '/team'
+      preLoaderRoute: typeof AuthenticatedTeamRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/settings': {
       id: '/_authenticated/settings'
       path: '/settings'
@@ -271,6 +339,13 @@ declare module '@tanstack/react-router' {
       path: '/pitch'
       fullPath: '/pitch'
       preLoaderRoute: typeof AuthenticatedPitchRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/investor': {
+      id: '/_authenticated/investor'
+      path: '/investor'
+      fullPath: '/investor'
+      preLoaderRoute: typeof AuthenticatedInvestorRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/ideas': {
@@ -315,6 +390,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedProjectsIndexRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/team/$slug': {
+      id: '/_authenticated/team/$slug'
+      path: '/$slug'
+      fullPath: '/team/$slug'
+      preLoaderRoute: typeof AuthenticatedTeamSlugRouteImport
+      parentRoute: typeof AuthenticatedTeamRoute
+    }
     '/_authenticated/projects/new': {
       id: '/_authenticated/projects/new'
       path: '/projects/new'
@@ -336,8 +418,35 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedPitchIdRouteImport
       parentRoute: typeof AuthenticatedPitchRoute
     }
+    '/_authenticated/invite/$token': {
+      id: '/_authenticated/invite/$token'
+      path: '/invite/$token'
+      fullPath: '/invite/$token'
+      preLoaderRoute: typeof AuthenticatedInviteTokenRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/investor/$id': {
+      id: '/_authenticated/investor/$id'
+      path: '/$id'
+      fullPath: '/investor/$id'
+      preLoaderRoute: typeof AuthenticatedInvestorIdRouteImport
+      parentRoute: typeof AuthenticatedInvestorRoute
+    }
   }
 }
+
+interface AuthenticatedInvestorRouteChildren {
+  AuthenticatedInvestorIdRoute: typeof AuthenticatedInvestorIdRoute
+}
+
+const AuthenticatedInvestorRouteChildren: AuthenticatedInvestorRouteChildren = {
+  AuthenticatedInvestorIdRoute: AuthenticatedInvestorIdRoute,
+}
+
+const AuthenticatedInvestorRouteWithChildren =
+  AuthenticatedInvestorRoute._addFileChildren(
+    AuthenticatedInvestorRouteChildren,
+  )
 
 interface AuthenticatedPitchRouteChildren {
   AuthenticatedPitchIdRoute: typeof AuthenticatedPitchIdRoute
@@ -350,16 +459,30 @@ const AuthenticatedPitchRouteChildren: AuthenticatedPitchRouteChildren = {
 const AuthenticatedPitchRouteWithChildren =
   AuthenticatedPitchRoute._addFileChildren(AuthenticatedPitchRouteChildren)
 
+interface AuthenticatedTeamRouteChildren {
+  AuthenticatedTeamSlugRoute: typeof AuthenticatedTeamSlugRoute
+}
+
+const AuthenticatedTeamRouteChildren: AuthenticatedTeamRouteChildren = {
+  AuthenticatedTeamSlugRoute: AuthenticatedTeamSlugRoute,
+}
+
+const AuthenticatedTeamRouteWithChildren =
+  AuthenticatedTeamRoute._addFileChildren(AuthenticatedTeamRouteChildren)
+
 interface AuthenticatedRouteRouteChildren {
   AuthenticatedAnalyticsRoute: typeof AuthenticatedAnalyticsRoute
   AuthenticatedCoachRoute: typeof AuthenticatedCoachRoute
   AuthenticatedDashboardRoute: typeof AuthenticatedDashboardRoute
   AuthenticatedExportsRoute: typeof AuthenticatedExportsRoute
   AuthenticatedIdeasRoute: typeof AuthenticatedIdeasRoute
+  AuthenticatedInvestorRoute: typeof AuthenticatedInvestorRouteWithChildren
   AuthenticatedPitchRoute: typeof AuthenticatedPitchRouteWithChildren
   AuthenticatedProfileRoute: typeof AuthenticatedProfileRoute
   AuthenticatedRoadmapRoute: typeof AuthenticatedRoadmapRoute
   AuthenticatedSettingsRoute: typeof AuthenticatedSettingsRoute
+  AuthenticatedTeamRoute: typeof AuthenticatedTeamRouteWithChildren
+  AuthenticatedInviteTokenRoute: typeof AuthenticatedInviteTokenRoute
   AuthenticatedProjectsIdRoute: typeof AuthenticatedProjectsIdRoute
   AuthenticatedProjectsNewRoute: typeof AuthenticatedProjectsNewRoute
   AuthenticatedProjectsIndexRoute: typeof AuthenticatedProjectsIndexRoute
@@ -371,10 +494,13 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedDashboardRoute: AuthenticatedDashboardRoute,
   AuthenticatedExportsRoute: AuthenticatedExportsRoute,
   AuthenticatedIdeasRoute: AuthenticatedIdeasRoute,
+  AuthenticatedInvestorRoute: AuthenticatedInvestorRouteWithChildren,
   AuthenticatedPitchRoute: AuthenticatedPitchRouteWithChildren,
   AuthenticatedProfileRoute: AuthenticatedProfileRoute,
   AuthenticatedRoadmapRoute: AuthenticatedRoadmapRoute,
   AuthenticatedSettingsRoute: AuthenticatedSettingsRoute,
+  AuthenticatedTeamRoute: AuthenticatedTeamRouteWithChildren,
+  AuthenticatedInviteTokenRoute: AuthenticatedInviteTokenRoute,
   AuthenticatedProjectsIdRoute: AuthenticatedProjectsIdRoute,
   AuthenticatedProjectsNewRoute: AuthenticatedProjectsNewRoute,
   AuthenticatedProjectsIndexRoute: AuthenticatedProjectsIndexRoute,
