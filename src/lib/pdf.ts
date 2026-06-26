@@ -1222,7 +1222,7 @@ export async function exportInvestorPdf(
   c.newPage();
   eyebrow(c, "07 · Fundraising");
   h1(c, "Fundraising recommendations");
-  bulletList(c, r.recommendations, "ok");
+  bulletList(c, r.fundraising_recommendations, "ok");
 
   c.finish();
   return doc.output("blob");
