@@ -28,9 +28,9 @@ function ProjectsList() {
   });
 
   return (
-    <div className="mx-auto max-w-6xl px-4 py-8 sm:px-6">
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <div>
+    <div className="mx-auto box-border w-full min-w-0 max-w-6xl px-3 py-6 sm:px-6 sm:py-10">
+      <div className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-3 sm:flex sm:flex-wrap sm:justify-between">
+        <div className="min-w-0">
           <h1 className="font-display text-2xl font-semibold tracking-tight sm:text-3xl">
             Projects
           </h1>
@@ -38,14 +38,14 @@ function ProjectsList() {
             Every startup idea you've analyzed.
           </p>
         </div>
-        <Button asChild className="shadow-glow">
+        <Button asChild size="sm" className="shrink-0 shadow-glow sm:size-default">
           <Link to="/projects/new">
             <Plus className="mr-1.5 h-4 w-4" /> New project
           </Link>
         </Button>
       </div>
 
-      <div className="mt-6">
+      <div className="mt-6 min-w-0">
         {isLoading ? (
           <p className="text-sm text-muted-foreground">Loading…</p>
         ) : (data?.projects.length ?? 0) === 0 ? (
@@ -60,7 +60,7 @@ function ProjectsList() {
             </Button>
           </div>
         ) : (
-          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+          <div className="grid min-w-0 grid-cols-[minmax(0,1fr)] gap-3 sm:grid-cols-2 lg:grid-cols-3">
             {data!.projects.map((p) => {
               const r = data!.reports.find((x) => x.project_id === p.id);
               return (
@@ -68,19 +68,19 @@ function ProjectsList() {
                   key={p.id}
                   to="/projects/$id"
                   params={{ id: p.id }}
-                  className="group rounded-xl border border-border bg-card p-5 shadow-soft transition hover:-translate-y-0.5 hover:border-primary/40 hover:shadow-glow"
+                  className="group flex min-w-0 max-w-full flex-col overflow-hidden rounded-xl border border-border bg-card p-4 shadow-soft transition hover:-translate-y-0.5 hover:border-primary/40 hover:shadow-glow sm:p-5"
                 >
-                  <div className="flex items-start justify-between gap-3">
-                    <h3 className="truncate font-display text-base font-semibold">
+                  <div className="grid min-w-0 grid-cols-[minmax(0,1fr)_auto] items-start gap-3">
+                    <h3 className="min-w-0 break-words font-display text-base font-semibold leading-snug">
                       {p.startup_name}
                     </h3>
                     {r && (
-                      <span className="inline-flex h-7 min-w-10 items-center justify-center rounded-md bg-primary/15 px-2 text-xs font-semibold text-primary">
+                      <span className="inline-flex h-7 min-w-10 shrink-0 items-center justify-center rounded-md bg-primary/15 px-2 text-xs font-semibold text-primary">
                         {r.score ?? 0}
                       </span>
                     )}
                   </div>
-                  <p className="mt-1 truncate text-xs text-muted-foreground">
+                  <p className="mt-1 line-clamp-2 break-words text-xs text-muted-foreground">
                     {p.industry || "—"} · {p.business_model || "—"}
                   </p>
                   <p className="mt-4 text-xs text-muted-foreground">
