@@ -20,11 +20,9 @@ import { Route as AuthenticatedExportsRouteImport } from './routes/_authenticate
 import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
 import { Route as AuthenticatedCoachRouteImport } from './routes/_authenticated/coach'
 import { Route as AuthenticatedAnalyticsRouteImport } from './routes/_authenticated/analytics'
-import { Route as AuthenticatedTeamIndexRouteImport } from './routes/_authenticated/team.index'
 import { Route as AuthenticatedProjectsIndexRouteImport } from './routes/_authenticated/projects.index'
 import { Route as AuthenticatedPitchIndexRouteImport } from './routes/_authenticated/pitch.index'
 import { Route as AuthenticatedInvestorIndexRouteImport } from './routes/_authenticated/investor.index'
-import { Route as AuthenticatedTeamSlugRouteImport } from './routes/_authenticated/team.$slug'
 import { Route as AuthenticatedProjectsNewRouteImport } from './routes/_authenticated/projects.new'
 import { Route as AuthenticatedProjectsIdRouteImport } from './routes/_authenticated/projects.$id'
 import { Route as AuthenticatedPitchIdRouteImport } from './routes/_authenticated/pitch.$id'
@@ -85,11 +83,6 @@ const AuthenticatedAnalyticsRoute = AuthenticatedAnalyticsRouteImport.update({
   path: '/analytics',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
-const AuthenticatedTeamIndexRoute = AuthenticatedTeamIndexRouteImport.update({
-  id: '/team/',
-  path: '/team/',
-  getParentRoute: () => AuthenticatedRouteRoute,
-} as any)
 const AuthenticatedProjectsIndexRoute =
   AuthenticatedProjectsIndexRouteImport.update({
     id: '/projects/',
@@ -107,11 +100,6 @@ const AuthenticatedInvestorIndexRoute =
     path: '/investor/',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
-const AuthenticatedTeamSlugRoute = AuthenticatedTeamSlugRouteImport.update({
-  id: '/team/$slug',
-  path: '/team/$slug',
-  getParentRoute: () => AuthenticatedRouteRoute,
-} as any)
 const AuthenticatedProjectsNewRoute =
   AuthenticatedProjectsNewRouteImport.update({
     id: '/projects/new',
@@ -156,11 +144,9 @@ export interface FileRoutesByFullPath {
   '/pitch/$id': typeof AuthenticatedPitchIdRoute
   '/projects/$id': typeof AuthenticatedProjectsIdRoute
   '/projects/new': typeof AuthenticatedProjectsNewRoute
-  '/team/$slug': typeof AuthenticatedTeamSlugRoute
   '/investor/': typeof AuthenticatedInvestorIndexRoute
   '/pitch/': typeof AuthenticatedPitchIndexRoute
   '/projects/': typeof AuthenticatedProjectsIndexRoute
-  '/team/': typeof AuthenticatedTeamIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -178,11 +164,9 @@ export interface FileRoutesByTo {
   '/pitch/$id': typeof AuthenticatedPitchIdRoute
   '/projects/$id': typeof AuthenticatedProjectsIdRoute
   '/projects/new': typeof AuthenticatedProjectsNewRoute
-  '/team/$slug': typeof AuthenticatedTeamSlugRoute
   '/investor': typeof AuthenticatedInvestorIndexRoute
   '/pitch': typeof AuthenticatedPitchIndexRoute
   '/projects': typeof AuthenticatedProjectsIndexRoute
-  '/team': typeof AuthenticatedTeamIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -202,11 +186,9 @@ export interface FileRoutesById {
   '/_authenticated/pitch/$id': typeof AuthenticatedPitchIdRoute
   '/_authenticated/projects/$id': typeof AuthenticatedProjectsIdRoute
   '/_authenticated/projects/new': typeof AuthenticatedProjectsNewRoute
-  '/_authenticated/team/$slug': typeof AuthenticatedTeamSlugRoute
   '/_authenticated/investor/': typeof AuthenticatedInvestorIndexRoute
   '/_authenticated/pitch/': typeof AuthenticatedPitchIndexRoute
   '/_authenticated/projects/': typeof AuthenticatedProjectsIndexRoute
-  '/_authenticated/team/': typeof AuthenticatedTeamIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -226,11 +208,9 @@ export interface FileRouteTypes {
     | '/pitch/$id'
     | '/projects/$id'
     | '/projects/new'
-    | '/team/$slug'
     | '/investor/'
     | '/pitch/'
     | '/projects/'
-    | '/team/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -248,11 +228,9 @@ export interface FileRouteTypes {
     | '/pitch/$id'
     | '/projects/$id'
     | '/projects/new'
-    | '/team/$slug'
     | '/investor'
     | '/pitch'
     | '/projects'
-    | '/team'
   id:
     | '__root__'
     | '/'
@@ -271,11 +249,9 @@ export interface FileRouteTypes {
     | '/_authenticated/pitch/$id'
     | '/_authenticated/projects/$id'
     | '/_authenticated/projects/new'
-    | '/_authenticated/team/$slug'
     | '/_authenticated/investor/'
     | '/_authenticated/pitch/'
     | '/_authenticated/projects/'
-    | '/_authenticated/team/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -363,13 +339,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAnalyticsRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
-    '/_authenticated/team/': {
-      id: '/_authenticated/team/'
-      path: '/team'
-      fullPath: '/team/'
-      preLoaderRoute: typeof AuthenticatedTeamIndexRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
-    }
     '/_authenticated/projects/': {
       id: '/_authenticated/projects/'
       path: '/projects'
@@ -389,13 +358,6 @@ declare module '@tanstack/react-router' {
       path: '/investor'
       fullPath: '/investor/'
       preLoaderRoute: typeof AuthenticatedInvestorIndexRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
-    }
-    '/_authenticated/team/$slug': {
-      id: '/_authenticated/team/$slug'
-      path: '/team/$slug'
-      fullPath: '/team/$slug'
-      preLoaderRoute: typeof AuthenticatedTeamSlugRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/projects/new': {
@@ -450,11 +412,9 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedPitchIdRoute: typeof AuthenticatedPitchIdRoute
   AuthenticatedProjectsIdRoute: typeof AuthenticatedProjectsIdRoute
   AuthenticatedProjectsNewRoute: typeof AuthenticatedProjectsNewRoute
-  AuthenticatedTeamSlugRoute: typeof AuthenticatedTeamSlugRoute
   AuthenticatedInvestorIndexRoute: typeof AuthenticatedInvestorIndexRoute
   AuthenticatedPitchIndexRoute: typeof AuthenticatedPitchIndexRoute
   AuthenticatedProjectsIndexRoute: typeof AuthenticatedProjectsIndexRoute
-  AuthenticatedTeamIndexRoute: typeof AuthenticatedTeamIndexRoute
 }
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
@@ -471,11 +431,9 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedPitchIdRoute: AuthenticatedPitchIdRoute,
   AuthenticatedProjectsIdRoute: AuthenticatedProjectsIdRoute,
   AuthenticatedProjectsNewRoute: AuthenticatedProjectsNewRoute,
-  AuthenticatedTeamSlugRoute: AuthenticatedTeamSlugRoute,
   AuthenticatedInvestorIndexRoute: AuthenticatedInvestorIndexRoute,
   AuthenticatedPitchIndexRoute: AuthenticatedPitchIndexRoute,
   AuthenticatedProjectsIndexRoute: AuthenticatedProjectsIndexRoute,
-  AuthenticatedTeamIndexRoute: AuthenticatedTeamIndexRoute,
 }
 
 const AuthenticatedRouteRouteWithChildren =
@@ -489,13 +447,3 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { startInstance } from './start.ts'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-    config: Awaited<ReturnType<typeof startInstance.getOptions>>
-  }
-}

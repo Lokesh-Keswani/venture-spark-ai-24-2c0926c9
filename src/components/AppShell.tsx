@@ -17,7 +17,6 @@ import {
   BarChart3,
   Lightbulb,
   Gauge,
-  Users2,
 } from "lucide-react";
 import { useTheme } from "@/hooks/use-theme";
 import { useAuth } from "@/hooks/use-auth";
@@ -31,7 +30,6 @@ const nav = [
   { to: "/ideas", label: "Idea Generator", icon: Lightbulb },
   { to: "/analytics", label: "Analytics", icon: BarChart3 },
   { to: "/investor", label: "Investor Readiness", icon: Gauge },
-  { to: "/team", label: "Team", icon: Users2 },
   { to: "/coach", label: "AI Co-Founder", icon: MessageSquare },
   { to: "/pitch", label: "Pitch Decks", icon: Presentation },
   { to: "/roadmap", label: "Roadmaps", icon: Map },
