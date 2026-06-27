@@ -246,7 +246,7 @@ function ProjectDetail() {
 
       {tab === "chat" && (
         <div className="mt-5">
-          <ChatPanel projectId={project.id} canSend={role !== "viewer"} />
+          <ChatPanel projectId={project.id} canSend={isMember} />
         </div>
       )}
       {tab === "files" && (
@@ -256,7 +256,7 @@ function ProjectDetail() {
       )}
       {tab === "comments" && (
         <div className="mt-5">
-          <CommentsPanel projectId={project.id} canComment={role !== "viewer"} />
+          <CommentsPanel projectId={project.id} canComment={isMember} />
         </div>
       )}
       {tab === "activity" && (

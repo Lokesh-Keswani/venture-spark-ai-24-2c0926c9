@@ -121,20 +121,23 @@ export const inviteToProject = createServerFn({ method: "POST" })
         .maybeSingle();
       const origin = process.env.VITE_PUBLIC_APP_URL || process.env.APP_URL || "";
       const acceptUrl = `${origin}/invite/${invite.token}`;
-      const { error: qErr } = await admin.rpc("enqueue_email", {
-        queue_name: "transactional_emails",
-        payload: {
-          template_name: "project-invite",
-          recipient_email: email,
-          template_data: {
-            project_name: project?.startup_name ?? "a VentureIQ project",
-            inviter_name: inviter?.full_name || inviter?.email || "A teammate",
-            role: data.role,
-            accept_url: acceptUrl,
+      const { error: qErr } = await (admin.rpc as unknown as (n: string, args: unknown) => Promise<{ error: unknown }>)(
+        "enqueue_email",
+        {
+          queue_name: "transactional_emails",
+          payload: {
+            template_name: "project-invite",
+            recipient_email: email,
+            template_data: {
+              project_name: project?.startup_name ?? "a VentureIQ project",
+              inviter_name: inviter?.full_name || inviter?.email || "A teammate",
+              role: data.role,
+              accept_url: acceptUrl,
+            },
+            idempotency_key: `invite-${invite.id}`,
           },
-          idempotency_key: `invite-${invite.id}`,
         },
-      });
+      );
       if (!qErr) emailSent = true;
     } catch {
       // Email infra not yet configured — invite still created, share link manually.
