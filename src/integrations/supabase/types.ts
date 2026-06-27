@@ -214,6 +214,250 @@ export type Database = {
         }
         Relationships: []
       }
+      project_activity: {
+        Row: {
+          action: string
+          created_at: string
+          id: string
+          meta: Json
+          project_id: string
+          target: string | null
+          user_id: string | null
+        }
+        Insert: {
+          action: string
+          created_at?: string
+          id?: string
+          meta?: Json
+          project_id: string
+          target?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          action?: string
+          created_at?: string
+          id?: string
+          meta?: Json
+          project_id?: string
+          target?: string | null
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "project_activity_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "startup_projects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      project_comments: {
+        Row: {
+          body: string
+          created_at: string
+          id: string
+          parent_id: string | null
+          project_id: string
+          resolved: boolean
+          target: string
+          user_id: string
+        }
+        Insert: {
+          body: string
+          created_at?: string
+          id?: string
+          parent_id?: string | null
+          project_id: string
+          resolved?: boolean
+          target: string
+          user_id: string
+        }
+        Update: {
+          body?: string
+          created_at?: string
+          id?: string
+          parent_id?: string | null
+          project_id?: string
+          resolved?: boolean
+          target?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "project_comments_parent_id_fkey"
+            columns: ["parent_id"]
+            isOneToOne: false
+            referencedRelation: "project_comments"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "project_comments_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "startup_projects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      project_files: {
+        Row: {
+          created_at: string
+          id: string
+          mime_type: string | null
+          name: string
+          path: string
+          project_id: string
+          size_bytes: number | null
+          uploaded_by: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          mime_type?: string | null
+          name: string
+          path: string
+          project_id: string
+          size_bytes?: number | null
+          uploaded_by: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          mime_type?: string | null
+          name?: string
+          path?: string
+          project_id?: string
+          size_bytes?: number | null
+          uploaded_by?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "project_files_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "startup_projects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      project_invites: {
+        Row: {
+          created_at: string
+          email: string
+          id: string
+          invited_by: string
+          project_id: string
+          role: string
+          status: string
+          token: string
+        }
+        Insert: {
+          created_at?: string
+          email: string
+          id?: string
+          invited_by: string
+          project_id: string
+          role: string
+          status?: string
+          token?: string
+        }
+        Update: {
+          created_at?: string
+          email?: string
+          id?: string
+          invited_by?: string
+          project_id?: string
+          role?: string
+          status?: string
+          token?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "project_invites_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "startup_projects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      project_members: {
+        Row: {
+          created_at: string
+          id: string
+          project_id: string
+          role: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          project_id: string
+          role: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          project_id?: string
+          role?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "project_members_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "startup_projects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      project_messages: {
+        Row: {
+          content: string | null
+          created_at: string
+          id: string
+          kind: string
+          project_id: string
+          reactions: Json
+          user_id: string
+          voice_duration: number | null
+          voice_path: string | null
+        }
+        Insert: {
+          content?: string | null
+          created_at?: string
+          id?: string
+          kind?: string
+          project_id: string
+          reactions?: Json
+          user_id: string
+          voice_duration?: number | null
+          voice_path?: string | null
+        }
+        Update: {
+          content?: string | null
+          created_at?: string
+          id?: string
+          kind?: string
+          project_id?: string
+          reactions?: Json
+          user_id?: string
+          voice_duration?: number | null
+          voice_path?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "project_messages_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "startup_projects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       roadmaps: {
         Row: {
           created_at: string
@@ -353,165 +597,25 @@ export type Database = {
         }
         Relationships: []
       }
-      workspace_activity: {
-        Row: {
-          action: string
-          created_at: string
-          id: string
-          metadata: Json
-          target: string | null
-          user_id: string
-          workspace_id: string
-        }
-        Insert: {
-          action: string
-          created_at?: string
-          id?: string
-          metadata?: Json
-          target?: string | null
-          user_id: string
-          workspace_id: string
-        }
-        Update: {
-          action?: string
-          created_at?: string
-          id?: string
-          metadata?: Json
-          target?: string | null
-          user_id?: string
-          workspace_id?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "workspace_activity_workspace_id_fkey"
-            columns: ["workspace_id"]
-            isOneToOne: false
-            referencedRelation: "workspaces"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      workspace_invitations: {
-        Row: {
-          created_at: string
-          email: string
-          id: string
-          invited_by: string
-          role: string
-          status: string
-          token: string
-          updated_at: string
-          workspace_id: string
-        }
-        Insert: {
-          created_at?: string
-          email: string
-          id?: string
-          invited_by: string
-          role: string
-          status?: string
-          token?: string
-          updated_at?: string
-          workspace_id: string
-        }
-        Update: {
-          created_at?: string
-          email?: string
-          id?: string
-          invited_by?: string
-          role?: string
-          status?: string
-          token?: string
-          updated_at?: string
-          workspace_id?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "workspace_invitations_workspace_id_fkey"
-            columns: ["workspace_id"]
-            isOneToOne: false
-            referencedRelation: "workspaces"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      workspace_members: {
-        Row: {
-          created_at: string
-          id: string
-          role: string
-          user_id: string
-          workspace_id: string
-        }
-        Insert: {
-          created_at?: string
-          id?: string
-          role: string
-          user_id: string
-          workspace_id: string
-        }
-        Update: {
-          created_at?: string
-          id?: string
-          role?: string
-          user_id?: string
-          workspace_id?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "workspace_members_workspace_id_fkey"
-            columns: ["workspace_id"]
-            isOneToOne: false
-            referencedRelation: "workspaces"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      workspaces: {
-        Row: {
-          created_at: string
-          description: string | null
-          id: string
-          name: string
-          owner_id: string
-          slug: string
-          updated_at: string
-        }
-        Insert: {
-          created_at?: string
-          description?: string | null
-          id?: string
-          name: string
-          owner_id: string
-          slug: string
-          updated_at?: string
-        }
-        Update: {
-          created_at?: string
-          description?: string | null
-          id?: string
-          name?: string
-          owner_id?: string
-          slug?: string
-          updated_at?: string
-        }
-        Relationships: []
-      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      can_manage_workspace: {
-        Args: { _user_id: string; _workspace_id: string }
+      can_edit_project: {
+        Args: { _project_id: string; _user_id: string }
         Returns: boolean
       }
-      is_workspace_member: {
-        Args: { _user_id: string; _workspace_id: string }
+      can_manage_project: {
+        Args: { _project_id: string; _user_id: string }
         Returns: boolean
       }
-      workspace_role: {
-        Args: { _user_id: string; _workspace_id: string }
+      is_project_member: {
+        Args: { _project_id: string; _user_id: string }
+        Returns: boolean
+      }
+      project_role: {
+        Args: { _project_id: string; _user_id: string }
         Returns: string
       }
     }
