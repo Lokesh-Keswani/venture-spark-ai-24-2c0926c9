@@ -17,12 +17,19 @@ import {
   Users,
   Lightbulb,
   Download,
+  MessageSquare,
+  Paperclip,
+  MessagesSquare,
+  Activity as ActivityIcon,
+  BarChart3,
 } from "lucide-react";
 import { toast } from "sonner";
 import { analyzeStartup, type DeepAnalysis, type Competitor } from "@/lib/analyze.functions";
 import { exportReportPdf, uploadExport, downloadBlob } from "@/lib/pdf";
 import { useState } from "react";
 import { formatDistanceToNow } from "date-fns";
+import { ShareProjectDialog } from "@/components/ShareProjectDialog";
+import { ChatPanel, FilesPanel, CommentsPanel, ActivityPanel } from "@/components/project/CollabPanels";
 
 export const Route = createFileRoute("/_authenticated/projects/$id")({
   head: () => ({ meta: [{ title: "Analysis — VentureIQ AI" }] }),
