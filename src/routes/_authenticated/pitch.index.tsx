@@ -11,7 +11,7 @@ import { exportPitchPdf, uploadExport, downloadBlob } from "@/lib/pdf";
 import { toast } from "sonner";
 import { formatDistanceToNow } from "date-fns";
 
-export const Route = createFileRoute("/_authenticated/pitch")({
+export const Route = createFileRoute("/_authenticated/pitch/")({
   head: () => ({ meta: [{ title: "Pitch Decks — VentureIQ AI" }] }),
   component: PitchList,
 });

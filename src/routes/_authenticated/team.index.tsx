@@ -9,7 +9,7 @@ import { toast } from "sonner";
 import { Plus, Users2, ArrowRight, Sparkles, Loader2 } from "lucide-react";
 import { createWorkspace } from "@/lib/workspaces.functions";
 
-export const Route = createFileRoute("/_authenticated/team")({
+export const Route = createFileRoute("/_authenticated/team/")({
   head: () => ({ meta: [{ title: "Team — VentureIQ AI" }] }),
   component: TeamIndex,
 });
