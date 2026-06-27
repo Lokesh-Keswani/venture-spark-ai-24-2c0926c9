@@ -285,10 +285,6 @@ function ProjectDetail() {
               {/* Success Score Visualization */}
               <section className="mt-6 grid gap-4 sm:grid-cols-3">
                 <ScoreRing score={analysis.overall_score} createdAt={latest?.created_at} />
-        <>
-          {/* Success Score Visualization */}
-          <section className="mt-6 grid gap-4 sm:grid-cols-3">
-            <ScoreRing score={analysis.overall_score} createdAt={latest?.created_at} />
             <div className="rounded-xl border border-border bg-card p-5 shadow-soft sm:col-span-2">
               <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
                 Executive summary
