@@ -142,15 +142,11 @@ function ShareBody({ projectId, ownerId }: { projectId: string; ownerId: string 
       const inv = await invite({ data: { projectId, email: email.trim(), role } });
       const link = `${origin}/invite/${inv.token}`;
       await navigator.clipboard.writeText(link).catch(() => {});
-      const emailSent = (inv as { email_sent?: boolean }).email_sent;
-      if (emailSent) {
-        toast.success(`Invite emailed to ${email.trim()} · link copied`);
-      } else {
-        toast.success(`Invite created · link copied (email not configured)`);
-      }
+      toast.success(`Invite link copied for ${email.trim()}`);
       setEmail("");
       qc.invalidateQueries({ queryKey: ["project-share", projectId] });
       qc.invalidateQueries({ queryKey: ["project-activity", projectId] });
+
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Failed to invite");
     } finally {
@@ -187,8 +183,9 @@ function ShareBody({ projectId, ownerId }: { projectId: string; ownerId: string 
             </Button>
           </div>
           <p className="mt-2 text-[11px] text-muted-foreground">
-            Invite link is copied to your clipboard. If email is configured, your teammate also receives a "Join project" email.
+            Invite link is copied to your clipboard. Tell the user to log in first, then open the invitation link to join the project.
           </p>
+
         </form>
       ) : (
         <p className="rounded-lg border border-dashed border-border p-3 text-xs text-muted-foreground">
