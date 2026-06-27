@@ -417,6 +417,8 @@ function ProjectDetail() {
               <Bullets items={analysis.next_steps} tone="ok" />
             </Card>
           </Section>
+            </>
+          )}
         </>
       )}
     </div>
