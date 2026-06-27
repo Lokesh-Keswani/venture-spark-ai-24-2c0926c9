@@ -142,15 +142,11 @@ function ShareBody({ projectId, ownerId }: { projectId: string; ownerId: string 
       const inv = await invite({ data: { projectId, email: email.trim(), role } });
       const link = `${origin}/invite/${inv.token}`;
       await navigator.clipboard.writeText(link).catch(() => {});
-      const emailSent = (inv as { email_sent?: boolean }).email_sent;
-      if (emailSent) {
-        toast.success(`Invite emailed to ${email.trim()} · link copied`);
-      } else {
-        toast.success(`Invite created · link copied (email not configured)`);
-      }
+      toast.success(`Invite link copied for ${email.trim()}`);
       setEmail("");
       qc.invalidateQueries({ queryKey: ["project-share", projectId] });
       qc.invalidateQueries({ queryKey: ["project-activity", projectId] });
+
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Failed to invite");
     } finally {
