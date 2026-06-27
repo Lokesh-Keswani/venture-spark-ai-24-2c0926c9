@@ -2,7 +2,7 @@ import { createServerFn } from "@tanstack/react-start";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { z } from "zod";
 
-const Role = z.enum(["admin", "editor", "viewer"]);
+const Role = z.enum(["admin", "member"]);
 
 export const inviteToProject = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])

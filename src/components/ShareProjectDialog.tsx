@@ -15,16 +15,16 @@ import {
   updateProjectMemberRole,
 } from "@/lib/collab.functions";
 
-type Role = "owner" | "admin" | "editor" | "viewer";
+type Role = "owner" | "admin" | "member";
+type InvitableRole = Exclude<Role, "owner">;
 
 function roleBadge(role: string) {
   const map: Record<string, string> = {
     owner: "bg-gradient-to-r from-amber-400 to-rose-500 text-white",
     admin: "bg-primary/15 text-primary",
-    editor: "bg-blue-500/15 text-blue-600 dark:text-blue-300",
-    viewer: "bg-muted text-muted-foreground",
+    member: "bg-muted text-foreground/80",
   };
-  return map[role] ?? map.viewer;
+  return map[role] ?? map.member;
 }
 
 export function ShareProjectDialog({
@@ -69,7 +69,7 @@ function ShareBody({ projectId, ownerId }: { projectId: string; ownerId: string 
   const revoke = useServerFn(revokeProjectInvite);
 
   const [email, setEmail] = useState("");
-  const [role, setRole] = useState<Exclude<Role, "owner">>("editor");
+  const [role, setRole] = useState<InvitableRole>("member");
   const [busy, setBusy] = useState(false);
 
   const { data } = useQuery({
@@ -88,30 +88,42 @@ function ShareBody({ projectId, ownerId }: { projectId: string; ownerId: string 
           .order("created_at", { ascending: false }),
       ]);
 
-      const userIds = [ownerId, ...(members ?? []).map((m) => m.user_id)];
+      const userIds = Array.from(new Set([ownerId, ...(members ?? []).map((m) => m.user_id)]));
       const { data: profiles } = await supabase
         .from("profiles")
         .select("id, full_name, email, avatar_url")
         .in("id", userIds);
       const pm = new Map((profiles ?? []).map((p) => [p.id, p]));
 
+      // Dedupe + ensure owner appears once at top, even if also a member row
+      const seen = new Set<string>([ownerId]);
       const ownerProfile = pm.get(ownerId);
-      const list = [
+      const list: {
+        id: string;
+        user_id: string;
+        role: Role;
+        profile: typeof ownerProfile;
+        isOwner: boolean;
+      }[] = [
         {
           id: `owner-${ownerId}`,
           user_id: ownerId,
-          role: "owner" as Role,
+          role: "owner",
           profile: ownerProfile,
           isOwner: true,
         },
-        ...(members ?? []).map((m) => ({
+      ];
+      for (const m of members ?? []) {
+        if (seen.has(m.user_id)) continue;
+        seen.add(m.user_id);
+        list.push({
           id: m.id,
           user_id: m.user_id,
           role: m.role as Role,
           profile: pm.get(m.user_id),
           isOwner: false,
-        })),
-      ];
+        });
+      }
       return { members: list, invites: invites ?? [] };
     },
   });
@@ -127,12 +139,15 @@ function ShareBody({ projectId, ownerId }: { projectId: string; ownerId: string 
     e.preventDefault();
     setBusy(true);
     try {
-      const inv = await invite({
-        data: { projectId, email: email.trim(), role },
-      });
+      const inv = await invite({ data: { projectId, email: email.trim(), role } });
       const link = `${origin}/invite/${inv.token}`;
       await navigator.clipboard.writeText(link).catch(() => {});
-      toast.success(`Invite sent. Link copied.`);
+      const emailSent = (inv as { email_sent?: boolean }).email_sent;
+      if (emailSent) {
+        toast.success(`Invite emailed to ${email.trim()} · link copied`);
+      } else {
+        toast.success(`Invite created · link copied (email not configured)`);
+      }
       setEmail("");
       qc.invalidateQueries({ queryKey: ["project-share", projectId] });
       qc.invalidateQueries({ queryKey: ["project-activity", projectId] });
@@ -145,7 +160,7 @@ function ShareBody({ projectId, ownerId }: { projectId: string; ownerId: string 
 
   return (
     <div className="space-y-5">
-      {canManage && (
+      {canManage ? (
         <form onSubmit={onInvite} className="rounded-xl border border-border bg-background/50 p-4">
           <p className="mb-2 text-xs font-medium uppercase tracking-wider text-muted-foreground">
             Invite by email
@@ -160,12 +175,11 @@ function ShareBody({ projectId, ownerId }: { projectId: string; ownerId: string 
             />
             <select
               value={role}
-              onChange={(e) => setRole(e.target.value as Exclude<Role, "owner">)}
+              onChange={(e) => setRole(e.target.value as InvitableRole)}
               className="h-9 rounded-md border border-input bg-background px-2 text-xs"
             >
               <option value="admin">Admin</option>
-              <option value="editor">Editor</option>
-              <option value="viewer">Viewer</option>
+              <option value="member">Member</option>
             </select>
             <Button type="submit" disabled={busy} className="col-span-2 sm:col-span-1">
               {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
@@ -173,9 +187,13 @@ function ShareBody({ projectId, ownerId }: { projectId: string; ownerId: string 
             </Button>
           </div>
           <p className="mt-2 text-[11px] text-muted-foreground">
-            An invite link is generated and copied to your clipboard automatically.
+            Invite link is copied to your clipboard. If email is configured, your teammate also receives a "Join project" email.
           </p>
         </form>
+      ) : (
+        <p className="rounded-lg border border-dashed border-border p-3 text-xs text-muted-foreground">
+          Only Owners and Admins can invite new members.
+        </p>
       )}
 
       <div>
@@ -183,74 +201,90 @@ function ShareBody({ projectId, ownerId }: { projectId: string; ownerId: string 
           <Users2 className="h-3.5 w-3.5" /> Members ({data?.members.length ?? 0})
         </p>
         <ul className="space-y-1.5">
-          {data?.members.map((m) => (
-            <li
-              key={m.id}
-              className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-2 rounded-lg border border-border bg-background/40 p-2"
-            >
-              <div className="flex min-w-0 items-center gap-2">
-                <div className="grid h-8 w-8 shrink-0 place-items-center rounded-full bg-primary text-xs font-bold text-primary-foreground">
-                  {(m.profile?.full_name || m.profile?.email || "?").charAt(0).toUpperCase()}
-                </div>
-                <div className="min-w-0">
-                  <div className="truncate text-sm font-medium">
-                    {m.profile?.full_name || m.profile?.email || "Member"}
-                    {m.user_id === user?.id && (
-                      <span className="ml-1.5 rounded bg-muted px-1 py-0.5 text-[9px] uppercase tracking-wider text-muted-foreground">
-                        you
-                      </span>
-                    )}
+          {data?.members.map((m) => {
+            // Permission to edit/remove THIS specific row
+            const canTouchRow =
+              !m.isOwner &&
+              (myRole === "owner" || (myRole === "admin" && m.role === "member"));
+            return (
+              <li
+                key={m.id}
+                className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-2 rounded-lg border border-border bg-background/40 p-2"
+              >
+                <div className="flex min-w-0 items-center gap-2">
+                  <div className="grid h-8 w-8 shrink-0 place-items-center rounded-full bg-primary text-xs font-bold text-primary-foreground">
+                    {(m.profile?.full_name || m.profile?.email || "?").charAt(0).toUpperCase()}
                   </div>
-                  <div className="truncate text-[11px] text-muted-foreground">{m.profile?.email}</div>
+                  <div className="min-w-0">
+                    <div className="truncate text-sm font-medium">
+                      {m.profile?.full_name || m.profile?.email || "Pending member"}
+                      {m.user_id === user?.id && (
+                        <span className="ml-1.5 rounded bg-muted px-1 py-0.5 text-[9px] uppercase tracking-wider text-muted-foreground">
+                          you
+                        </span>
+                      )}
+                    </div>
+                    <div className="truncate text-[11px] text-muted-foreground">
+                      {m.profile?.email ?? ""}
+                    </div>
+                  </div>
                 </div>
-              </div>
-              <div className="flex shrink-0 items-center gap-1">
-                {canManage && !m.isOwner ? (
-                  <>
-                    <select
-                      value={m.role}
-                      onChange={async (e) => {
-                        try {
-                          await updateRole({
-                            data: { memberId: m.id, role: e.target.value as Exclude<Role, "owner"> },
-                          });
-                          qc.invalidateQueries({ queryKey: ["project-share", projectId] });
-                        } catch (err) {
-                          toast.error(err instanceof Error ? err.message : "Failed");
-                        }
-                      }}
-                      className="h-7 rounded border border-input bg-background px-1.5 text-[11px]"
+                <div className="flex shrink-0 items-center gap-1">
+                  {canTouchRow ? (
+                    <>
+                      {myRole === "owner" && (
+                        <select
+                          value={m.role}
+                          onChange={async (e) => {
+                            try {
+                              await updateRole({
+                                data: { memberId: m.id, role: e.target.value as InvitableRole },
+                              });
+                              qc.invalidateQueries({ queryKey: ["project-share", projectId] });
+                            } catch (err) {
+                              toast.error(err instanceof Error ? err.message : "Failed");
+                            }
+                          }}
+                          className="h-7 rounded border border-input bg-background px-1.5 text-[11px]"
+                        >
+                          <option value="admin">Admin</option>
+                          <option value="member">Member</option>
+                        </select>
+                      )}
+                      {myRole !== "owner" && (
+                        <span
+                          className={`rounded-full px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide ${roleBadge(m.role)}`}
+                        >
+                          {m.role}
+                        </span>
+                      )}
+                      <Button
+                        size="icon"
+                        variant="ghost"
+                        onClick={async () => {
+                          if (!confirm("Remove this member?")) return;
+                          try {
+                            await remove({ data: { memberId: m.id } });
+                            qc.invalidateQueries({ queryKey: ["project-share", projectId] });
+                          } catch (err) {
+                            toast.error(err instanceof Error ? err.message : "Failed");
+                          }
+                        }}
+                      >
+                        <UserMinus className="h-3.5 w-3.5" />
+                      </Button>
+                    </>
+                  ) : (
+                    <span
+                      className={`rounded-full px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide ${roleBadge(m.role)}`}
                     >
-                      <option value="admin">Admin</option>
-                      <option value="editor">Editor</option>
-                      <option value="viewer">Viewer</option>
-                    </select>
-                    <Button
-                      size="icon"
-                      variant="ghost"
-                      onClick={async () => {
-                        if (!confirm("Remove this member?")) return;
-                        try {
-                          await remove({ data: { memberId: m.id } });
-                          qc.invalidateQueries({ queryKey: ["project-share", projectId] });
-                        } catch (err) {
-                          toast.error(err instanceof Error ? err.message : "Failed");
-                        }
-                      }}
-                    >
-                      <UserMinus className="h-3.5 w-3.5" />
-                    </Button>
-                  </>
-                ) : (
-                  <span
-                    className={`rounded-full px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide ${roleBadge(m.role)}`}
-                  >
-                    {m.role}
-                  </span>
-                )}
-              </div>
-            </li>
-          ))}
+                      {m.role}
+                    </span>
+                  )}
+                </div>
+              </li>
+            );
+          })}
         </ul>
       </div>
 
