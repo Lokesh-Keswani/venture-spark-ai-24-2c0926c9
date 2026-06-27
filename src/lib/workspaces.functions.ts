@@ -24,9 +24,13 @@ export const createWorkspace = createServerFn({ method: "POST" })
       .parse(input),
   )
   .handler(async ({ data, context }) => {
+    // Use admin client for the bootstrap insert: we've already validated the
+    // user via requireSupabaseAuth, and the SELECT RLS policy on workspaces
+    // requires membership which doesn't exist until the owner row is created.
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const base = slugify(data.name);
     const slug = `${base}-${Math.random().toString(36).slice(2, 6)}`;
-    const { data: ws, error } = await context.supabase
+    const { data: ws, error } = await supabaseAdmin
       .from("workspaces")
       .insert({
         name: data.name,
@@ -36,14 +40,20 @@ export const createWorkspace = createServerFn({ method: "POST" })
       })
       .select("*")
       .single();
-    if (error) throw new Error(error.message);
+    if (error) {
+      console.error("[createWorkspace] insert workspace failed", error);
+      throw new Error(error.message);
+    }
 
-    const { error: me } = await context.supabase
+    const { error: me } = await supabaseAdmin
       .from("workspace_members")
       .insert({ workspace_id: ws.id, user_id: context.userId, role: "owner" });
-    if (me) throw new Error(me.message);
+    if (me) {
+      console.error("[createWorkspace] insert member failed", me);
+      throw new Error(me.message);
+    }
 
-    await context.supabase.from("workspace_activity").insert({
+    await supabaseAdmin.from("workspace_activity").insert({
       workspace_id: ws.id,
       user_id: context.userId,
       action: "workspace.created",
