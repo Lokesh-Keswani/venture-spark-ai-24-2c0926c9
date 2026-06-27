@@ -46,7 +46,7 @@ function ProjectDetail() {
   const [exporting, setExporting] = useState(false);
   const [tab, setTab] = useState<"analysis" | "chat" | "files" | "comments" | "activity">("analysis");
 
-  // Project role (owner, admin, editor, viewer) drives editor/viewer affordances.
+  // Project role (owner, admin, member) drives management/editing affordances.
   const { data: roleData } = useQuery({
     queryKey: ["project-role", id, user?.id],
     enabled: !!user,
@@ -55,8 +55,8 @@ function ProjectDetail() {
         _project_id: id,
         _user_id: user!.id,
       });
-      if (error) return "viewer";
-      return (data as string) ?? "viewer";
+      if (error) return "member";
+      return (data as string) ?? "member";
     },
   });
   const role = (roleData ?? "member") as "owner" | "admin" | "member";
