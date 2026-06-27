@@ -108,8 +108,17 @@ function ProjectDetail() {
         },
       });
       toast.success("Analysis ready", { id: "re" });
+      if (user) {
+        await supabase.from("project_activity").insert({
+          project_id: project.id,
+          user_id: user.id,
+          action: "analysis.generated",
+          target: project.startup_name,
+        });
+      }
       qc.invalidateQueries({ queryKey: ["project", id] });
       qc.invalidateQueries({ queryKey: ["dashboard"] });
+      qc.invalidateQueries({ queryKey: ["project-activity", id] });
     } catch (e) {
       toast.error(e instanceof Error ? e.message : "Failed", { id: "re" });
     } finally {
