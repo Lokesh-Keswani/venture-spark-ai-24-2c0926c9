@@ -172,6 +172,7 @@ function ProjectDetail() {
           </p>
         </div>
         <div className="flex flex-wrap gap-2">
+          <ShareProjectDialog projectId={project.id} projectName={project.startup_name} ownerId={project.user_id} />
           {analysis && (
             <Button
               size="sm"
@@ -187,38 +188,103 @@ function ProjectDetail() {
               Download Analysis
             </Button>
           )}
-          <Button variant="outline" size="sm" onClick={rerun} disabled={busy}>
-            {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : <RefreshCw className="mr-1.5 h-4 w-4" />}
-            Re-analyze
-          </Button>
-          <Button variant="ghost" size="sm" onClick={remove}>
-            <Trash2 className="h-4 w-4" />
-          </Button>
+          {canEdit && (
+            <Button variant="outline" size="sm" onClick={rerun} disabled={busy}>
+              {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : <RefreshCw className="mr-1.5 h-4 w-4" />}
+              Re-analyze
+            </Button>
+          )}
+          {role === "owner" && (
+            <Button variant="ghost" size="sm" onClick={remove}>
+              <Trash2 className="h-4 w-4" />
+            </Button>
+          )}
         </div>
       </div>
 
-      <section className="mt-6 rounded-xl border border-border bg-card p-5 shadow-soft">
-        <h2 className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
-          The idea
-        </h2>
-        <p className="mt-2 whitespace-pre-wrap text-sm leading-relaxed">{project.startup_idea}</p>
-        {project.target_audience && (
-          <p className="mt-3 text-xs text-muted-foreground">
-            <span className="font-medium text-foreground">Audience: </span>
-            {project.target_audience}
-          </p>
-        )}
-      </section>
+      {/* Role badge */}
+      <div className="mt-2 inline-flex items-center gap-1.5 rounded-full bg-muted px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
+        <span className="h-1.5 w-1.5 rounded-full bg-primary" /> Your role: {role}
+      </div>
 
-      {!analysis ? (
-        <div className="mt-6 flex flex-col items-center justify-center rounded-xl border border-dashed border-border bg-card py-12 text-center">
-          <Sparkles className="h-6 w-6 text-muted-foreground" />
-          <p className="mt-2 text-sm text-muted-foreground">No analysis yet.</p>
-          <Button onClick={rerun} disabled={busy} className="mt-3">
-            {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : "Generate deep analysis"}
-          </Button>
+      {/* Tabs */}
+      <div className="mt-5 flex flex-wrap gap-1.5 border-b border-border">
+        {[
+          { id: "analysis" as const, label: "Analysis", icon: BarChart3 },
+          { id: "chat" as const, label: "Team Chat", icon: MessageSquare },
+          { id: "files" as const, label: "Files", icon: Paperclip },
+          { id: "comments" as const, label: "Comments", icon: MessagesSquare },
+          { id: "activity" as const, label: "Activity", icon: ActivityIcon },
+        ].map((t) => {
+          const active = tab === t.id;
+          return (
+            <button
+              key={t.id}
+              onClick={() => setTab(t.id)}
+              className={`-mb-px inline-flex items-center gap-1.5 border-b-2 px-3 py-2 text-sm transition ${
+                active
+                  ? "border-primary text-foreground"
+                  : "border-transparent text-muted-foreground hover:text-foreground"
+              }`}
+            >
+              <t.icon className="h-3.5 w-3.5" />
+              {t.label}
+            </button>
+          );
+        })}
+      </div>
+
+      {tab === "chat" && (
+        <div className="mt-5">
+          <ChatPanel projectId={project.id} canSend={role !== "viewer"} />
         </div>
-      ) : (
+      )}
+      {tab === "files" && (
+        <div className="mt-5">
+          <FilesPanel projectId={project.id} canEdit={canEdit} />
+        </div>
+      )}
+      {tab === "comments" && (
+        <div className="mt-5">
+          <CommentsPanel projectId={project.id} canComment={role !== "viewer"} />
+        </div>
+      )}
+      {tab === "activity" && (
+        <div className="mt-5">
+          <ActivityPanel projectId={project.id} />
+        </div>
+      )}
+
+      {tab === "analysis" && (
+        <>
+          <section className="mt-6 rounded-xl border border-border bg-card p-5 shadow-soft">
+            <h2 className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
+              The idea
+            </h2>
+            <p className="mt-2 whitespace-pre-wrap text-sm leading-relaxed">{project.startup_idea}</p>
+            {project.target_audience && (
+              <p className="mt-3 text-xs text-muted-foreground">
+                <span className="font-medium text-foreground">Audience: </span>
+                {project.target_audience}
+              </p>
+            )}
+          </section>
+
+          {!analysis ? (
+            <div className="mt-6 flex flex-col items-center justify-center rounded-xl border border-dashed border-border bg-card py-12 text-center">
+              <Sparkles className="h-6 w-6 text-muted-foreground" />
+              <p className="mt-2 text-sm text-muted-foreground">No analysis yet.</p>
+              {canEdit && (
+                <Button onClick={rerun} disabled={busy} className="mt-3">
+                  {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : "Generate deep analysis"}
+                </Button>
+              )}
+            </div>
+          ) : (
+            <>
+              {/* Success Score Visualization */}
+              <section className="mt-6 grid gap-4 sm:grid-cols-3">
+                <ScoreRing score={analysis.overall_score} createdAt={latest?.created_at} />
         <>
           {/* Success Score Visualization */}
           <section className="mt-6 grid gap-4 sm:grid-cols-3">
