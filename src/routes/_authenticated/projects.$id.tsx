@@ -44,6 +44,24 @@ function ProjectDetail() {
   const analyze = useServerFn(analyzeStartup);
   const [busy, setBusy] = useState(false);
   const [exporting, setExporting] = useState(false);
+  const [tab, setTab] = useState<"analysis" | "chat" | "files" | "comments" | "activity">("analysis");
+
+  // Project role (owner, admin, editor, viewer) drives editor/viewer affordances.
+  const { data: roleData } = useQuery({
+    queryKey: ["project-role", id, user?.id],
+    enabled: !!user,
+    queryFn: async () => {
+      const { data, error } = await supabase.rpc("project_role", {
+        _project_id: id,
+        _user_id: user!.id,
+      });
+      if (error) return "viewer";
+      return (data as string) ?? "viewer";
+    },
+  });
+  const role = (roleData ?? "viewer") as "owner" | "admin" | "editor" | "viewer";
+  const canEdit = role === "owner" || role === "admin" || role === "editor";
+  const canManage = role === "owner" || role === "admin";
 
   const { data, isLoading } = useQuery({
     queryKey: ["project", id],
