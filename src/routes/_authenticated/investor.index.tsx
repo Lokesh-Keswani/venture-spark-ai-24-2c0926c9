@@ -22,7 +22,7 @@ import {
 } from "@/lib/investor.functions";
 import { exportInvestorPdf, uploadExport, downloadBlob } from "@/lib/pdf";
 
-export const Route = createFileRoute("/_authenticated/investor")({
+export const Route = createFileRoute("/_authenticated/investor/")({
   head: () => ({ meta: [{ title: "Investor Readiness — VentureIQ AI" }] }),
   component: InvestorIndex,
 });
