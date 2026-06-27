@@ -59,9 +59,10 @@ function ProjectDetail() {
       return (data as string) ?? "viewer";
     },
   });
-  const role = (roleData ?? "viewer") as "owner" | "admin" | "editor" | "viewer";
-  const canEdit = role === "owner" || role === "admin" || role === "editor";
+  const role = (roleData ?? "member") as "owner" | "admin" | "member";
   const canManage = role === "owner" || role === "admin";
+  const canEdit = canManage; // Only Owner/Admin can modify project content
+  const isMember = role === "owner" || role === "admin" || role === "member";
 
   const { data, isLoading } = useQuery({
     queryKey: ["project", id],
