@@ -3,7 +3,6 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import {
   Activity,
@@ -11,13 +10,15 @@ import {
   File as FileIcon,
   Loader2,
   Mic,
+  Pause,
   Paperclip,
+  Play,
   Send,
   Square,
   Trash2,
 } from "lucide-react";
 import { toast } from "sonner";
-import { formatDistanceToNow } from "date-fns";
+import { formatDateTime, formatDuration, formatTime, useUserTimezone } from "@/lib/timezone";
 
 type Profile = { id: string; full_name: string | null; email: string | null; avatar_url: string | null };
 
@@ -46,11 +47,12 @@ function Avatar({ p, size = 8 }: { p?: Profile; size?: number }) {
 }
 
 /* ============================================================
- * CHAT PANEL — realtime team chat with voice notes
+ * CHAT PANEL
  * ============================================================ */
 export function ChatPanel({ projectId, canSend }: { projectId: string; canSend: boolean }) {
   const { user } = useAuth();
   const qc = useQueryClient();
+  const tz = useUserTimezone();
   const [text, setText] = useState("");
   const scrollerRef = useRef<HTMLDivElement>(null);
   const [sending, setSending] = useState(false);
@@ -72,16 +74,13 @@ export function ChatPanel({ projectId, canSend }: { projectId: string; canSend: 
   const userIds = useMemo(() => Array.from(new Set(messages.map((m) => m.user_id))), [messages]);
   const { data: profiles } = useProjectProfiles(userIds);
 
-  // Realtime
   useEffect(() => {
     const channel = supabase
       .channel(`project-messages-${projectId}`)
       .on(
         "postgres_changes",
         { event: "*", schema: "public", table: "project_messages", filter: `project_id=eq.${projectId}` },
-        () => {
-          qc.invalidateQueries({ queryKey: ["project-messages", projectId] });
-        },
+        () => qc.invalidateQueries({ queryKey: ["project-messages", projectId] }),
       )
       .subscribe();
     return () => {
@@ -91,7 +90,7 @@ export function ChatPanel({ projectId, canSend }: { projectId: string; canSend: 
 
   useEffect(() => {
     const el = scrollerRef.current;
-    if (el) el.scrollTop = el.scrollHeight;
+    if (el) el.scrollTo({ top: el.scrollHeight, behavior: "smooth" });
   }, [messages.length]);
 
   async function send() {
@@ -122,8 +121,8 @@ export function ChatPanel({ projectId, canSend }: { projectId: string; canSend: 
   }
 
   return (
-    <div className="flex h-[70vh] flex-col rounded-2xl border border-border bg-card/60 backdrop-blur">
-      <div ref={scrollerRef} className="min-h-0 flex-1 overflow-y-auto p-4 space-y-3">
+    <div className="flex h-[calc(100vh-18rem)] min-h-[420px] flex-col overflow-hidden rounded-2xl border border-border bg-card/60 backdrop-blur">
+      <div ref={scrollerRef} className="min-h-0 flex-1 space-y-3 overflow-y-auto p-4">
         {messages.length === 0 ? (
           <p className="grid h-full place-items-center text-sm text-muted-foreground">
             Start the conversation — say hi 👋
@@ -135,7 +134,7 @@ export function ChatPanel({ projectId, canSend }: { projectId: string; canSend: 
             return (
               <div key={m.id} className={`flex gap-2 ${mine ? "flex-row-reverse" : ""}`}>
                 <Avatar p={p} />
-                <div className={`group max-w-[75%] min-w-0 ${mine ? "items-end" : "items-start"} flex flex-col`}>
+                <div className={`group flex max-w-[80%] min-w-0 flex-col ${mine ? "items-end" : "items-start"}`}>
                   <div
                     className={`rounded-2xl px-3.5 py-2 text-sm shadow-soft ${
                       mine ? "bg-primary text-primary-foreground" : "bg-background border border-border"
@@ -147,13 +146,17 @@ export function ChatPanel({ projectId, canSend }: { projectId: string; canSend: 
                       </div>
                     )}
                     {m.kind === "voice" ? (
-                      <VoicePlayer path={m.voice_path!} duration={Number(m.voice_duration ?? 0)} />
+                      <VoicePlayer
+                        path={m.voice_path!}
+                        duration={Number(m.voice_duration ?? 0)}
+                        mine={mine}
+                      />
                     ) : (
                       <p className="whitespace-pre-wrap break-words">{m.content}</p>
                     )}
                   </div>
-                  <div className={`mt-0.5 flex items-center gap-1 text-[10px] text-muted-foreground ${mine ? "flex-row-reverse" : ""}`}>
-                    <span>{formatDistanceToNow(new Date(m.created_at), { addSuffix: true })}</span>
+                  <div className={`mt-0.5 flex items-center gap-1.5 text-[10px] text-muted-foreground ${mine ? "flex-row-reverse" : ""}`}>
+                    <span title={formatDateTime(m.created_at, tz)}>{formatTime(m.created_at, tz)}</span>
                     {mine && (
                       <button
                         onClick={() => deleteMessage(m.id, m.voice_path)}
@@ -172,7 +175,7 @@ export function ChatPanel({ projectId, canSend }: { projectId: string; canSend: 
       </div>
 
       {canSend ? (
-        <div className="border-t border-border p-3">
+        <div className="border-t border-border bg-card/80 p-3">
           <div className="flex items-end gap-2">
             <Textarea
               value={text}
@@ -188,22 +191,27 @@ export function ChatPanel({ projectId, canSend }: { projectId: string; canSend: 
               }}
             />
             <VoiceRecorder projectId={projectId} />
-            <Button onClick={send} disabled={!text.trim() || sending}>
+            <Button onClick={send} disabled={!text.trim() || sending} size="icon">
               {sending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
             </Button>
           </div>
         </div>
       ) : (
         <div className="border-t border-border p-3 text-center text-xs text-muted-foreground">
-          Viewers can read but not send messages.
+          You do not have permission to send messages.
         </div>
       )}
     </div>
   );
 }
 
-function VoicePlayer({ path, duration }: { path: string; duration: number }) {
+/* ===== Modern WhatsApp-style voice player ===== */
+function VoicePlayer({ path, duration, mine }: { path: string; duration: number; mine: boolean }) {
   const [url, setUrl] = useState<string | null>(null);
+  const [playing, setPlaying] = useState(false);
+  const [current, setCurrent] = useState(0);
+  const audioRef = useRef<HTMLAudioElement | null>(null);
+
   useEffect(() => {
     let alive = true;
     supabase.storage
@@ -216,15 +224,93 @@ function VoicePlayer({ path, duration }: { path: string; duration: number }) {
       alive = false;
     };
   }, [path]);
+
+  useEffect(() => {
+    const a = audioRef.current;
+    if (!a) return;
+    const onTime = () => setCurrent(a.currentTime);
+    const onEnd = () => {
+      setPlaying(false);
+      setCurrent(0);
+    };
+    a.addEventListener("timeupdate", onTime);
+    a.addEventListener("ended", onEnd);
+    return () => {
+      a.removeEventListener("timeupdate", onTime);
+      a.removeEventListener("ended", onEnd);
+    };
+  }, [url]);
+
+  function toggle() {
+    const a = audioRef.current;
+    if (!a) return;
+    if (playing) {
+      a.pause();
+      setPlaying(false);
+    } else {
+      a.play().then(() => setPlaying(true)).catch(() => {});
+    }
+  }
+
+  const total = duration > 0 && isFinite(duration) ? duration : 0;
+  const pct = total > 0 ? Math.min(100, (current / total) * 100) : 0;
+  const display = playing || current > 0 ? current : total;
+
+  // Static "waveform" bars — purely decorative, gives WhatsApp feel
+  const bars = useMemo(() => {
+    const arr: number[] = [];
+    const seed = path.length;
+    for (let i = 0; i < 28; i++) {
+      arr.push(0.3 + (((seed * (i + 1)) % 17) / 17) * 0.7);
+    }
+    return arr;
+  }, [path]);
+
   return (
-    <div className="flex items-center gap-2">
-      <Mic className="h-3.5 w-3.5 opacity-70" />
-      {url ? (
-        <audio controls src={url} className="h-8 max-w-[220px]" />
-      ) : (
-        <Loader2 className="h-3 w-3 animate-spin" />
-      )}
-      {duration > 0 && <span className="text-[10px] opacity-70">{Math.round(duration)}s</span>}
+    <div className="flex min-w-[220px] items-center gap-2.5">
+      <button
+        type="button"
+        onClick={toggle}
+        disabled={!url}
+        className={`grid h-9 w-9 shrink-0 place-items-center rounded-full transition ${
+          mine ? "bg-primary-foreground/20 text-primary-foreground hover:bg-primary-foreground/30" : "bg-primary text-primary-foreground hover:opacity-90"
+        }`}
+        aria-label={playing ? "Pause" : "Play"}
+      >
+        {!url ? (
+          <Loader2 className="h-4 w-4 animate-spin" />
+        ) : playing ? (
+          <Pause className="h-4 w-4" />
+        ) : (
+          <Play className="ml-0.5 h-4 w-4" />
+        )}
+      </button>
+      <div className="min-w-0 flex-1">
+        <div className="flex h-7 items-center gap-[2px]">
+          {bars.map((h, i) => {
+            const active = (i / bars.length) * 100 <= pct;
+            return (
+              <span
+                key={i}
+                className={`w-[2px] rounded-full transition-colors ${
+                  active
+                    ? mine
+                      ? "bg-primary-foreground"
+                      : "bg-primary"
+                    : mine
+                      ? "bg-primary-foreground/40"
+                      : "bg-muted-foreground/40"
+                }`}
+                style={{ height: `${Math.round(h * 22) + 4}px` }}
+              />
+            );
+          })}
+        </div>
+        <div className={`mt-0.5 text-[10px] tabular-nums ${mine ? "text-primary-foreground/80" : "text-muted-foreground"}`}>
+          {formatDuration(display)}
+        </div>
+      </div>
+      {url && <audio ref={audioRef} src={url} preload="metadata" className="hidden" />}
     </div>
   );
 }
@@ -233,9 +319,17 @@ function VoiceRecorder({ projectId }: { projectId: string }) {
   const { user } = useAuth();
   const [recording, setRecording] = useState(false);
   const [uploading, setUploading] = useState(false);
+  const [elapsed, setElapsed] = useState(0);
   const chunksRef = useRef<Blob[]>([]);
   const recorderRef = useRef<MediaRecorder | null>(null);
   const startedAtRef = useRef<number>(0);
+  const tickRef = useRef<number | null>(null);
+
+  useEffect(() => {
+    return () => {
+      if (tickRef.current) window.clearInterval(tickRef.current);
+    };
+  }, []);
 
   async function start() {
     if (!user) return;
@@ -251,6 +345,11 @@ function VoiceRecorder({ projectId }: { projectId: string }) {
         const duration = (Date.now() - startedAtRef.current) / 1000;
         const blob = new Blob(chunksRef.current, { type: mime });
         stream.getTracks().forEach((t) => t.stop());
+        if (tickRef.current) {
+          window.clearInterval(tickRef.current);
+          tickRef.current = null;
+        }
+        setElapsed(0);
         setUploading(true);
         try {
           const path = `${projectId}/${crypto.randomUUID()}.webm`;
@@ -276,6 +375,9 @@ function VoiceRecorder({ projectId }: { projectId: string }) {
       startedAtRef.current = Date.now();
       rec.start();
       setRecording(true);
+      tickRef.current = window.setInterval(() => {
+        setElapsed((Date.now() - startedAtRef.current) / 1000);
+      }, 200);
     } catch {
       toast.error("Microphone access denied");
     }
@@ -286,22 +388,29 @@ function VoiceRecorder({ projectId }: { projectId: string }) {
   }
 
   return (
-    <Button
-      type="button"
-      variant={recording ? "destructive" : "outline"}
-      size="icon"
-      onClick={recording ? stop : start}
-      disabled={uploading}
-      aria-label={recording ? "Stop recording" : "Record voice note"}
-    >
-      {uploading ? (
-        <Loader2 className="h-4 w-4 animate-spin" />
-      ) : recording ? (
-        <Square className="h-4 w-4 animate-pulse" />
-      ) : (
-        <Mic className="h-4 w-4" />
+    <div className="flex items-center gap-1.5">
+      {recording && (
+        <span className="rounded-full bg-destructive/10 px-2 py-0.5 text-[11px] font-medium tabular-nums text-destructive">
+          ● {formatDuration(elapsed)}
+        </span>
       )}
-    </Button>
+      <Button
+        type="button"
+        variant={recording ? "destructive" : "outline"}
+        size="icon"
+        onClick={recording ? stop : start}
+        disabled={uploading}
+        aria-label={recording ? "Stop recording" : "Record voice note"}
+      >
+        {uploading ? (
+          <Loader2 className="h-4 w-4 animate-spin" />
+        ) : recording ? (
+          <Square className="h-4 w-4 animate-pulse" />
+        ) : (
+          <Mic className="h-4 w-4" />
+        )}
+      </Button>
+    </div>
   );
 }
 
@@ -311,6 +420,7 @@ function VoiceRecorder({ projectId }: { projectId: string }) {
 export function FilesPanel({ projectId, canEdit }: { projectId: string; canEdit: boolean }) {
   const { user } = useAuth();
   const qc = useQueryClient();
+  const tz = useUserTimezone();
   const fileRef = useRef<HTMLInputElement>(null);
   const [uploading, setUploading] = useState(false);
 
@@ -427,8 +537,7 @@ export function FilesPanel({ projectId, canEdit }: { projectId: string; canEdit:
                 <div className="min-w-0">
                   <div className="truncate text-sm font-medium">{f.name}</div>
                   <div className="truncate text-[11px] text-muted-foreground">
-                    {(p?.full_name || p?.email || "Member")} ·{" "}
-                    {formatDistanceToNow(new Date(f.created_at), { addSuffix: true })}
+                    {(p?.full_name || p?.email || "Member")} · {formatDateTime(f.created_at, tz)}
                     {f.size_bytes && ` · ${Math.round((f.size_bytes / 1024) * 10) / 10}KB`}
                   </div>
                 </div>
@@ -452,13 +561,14 @@ export function FilesPanel({ projectId, canEdit }: { projectId: string; canEdit:
 }
 
 /* ============================================================
- * COMMENTS PANEL — comments on analysis / pitch / roadmap / investor
+ * COMMENTS PANEL
  * ============================================================ */
 type CommentTarget = "analysis" | "pitch" | "roadmap" | "investor";
 
 export function CommentsPanel({ projectId, canComment }: { projectId: string; canComment: boolean }) {
   const { user } = useAuth();
   const qc = useQueryClient();
+  const tz = useUserTimezone();
   const [target, setTarget] = useState<CommentTarget>("analysis");
   const [body, setBody] = useState("");
   const [replyingTo, setReplyingTo] = useState<string | null>(null);
@@ -561,8 +671,8 @@ export function CommentsPanel({ projectId, canComment }: { projectId: string; ca
                   <div className="min-w-0 flex-1">
                     <div className="flex items-center justify-between gap-2">
                       <div className="text-sm font-semibold">{p?.full_name || p?.email || "Member"}</div>
-                      <div className="text-[10px] text-muted-foreground">
-                        {formatDistanceToNow(new Date(c.created_at), { addSuffix: true })}
+                      <div className="text-[10px] text-muted-foreground" title={formatDateTime(c.created_at, tz)}>
+                        {formatDateTime(c.created_at, tz)}
                       </div>
                     </div>
                     <p className="mt-1 whitespace-pre-wrap break-words text-sm">{c.body}</p>
@@ -596,7 +706,7 @@ export function CommentsPanel({ projectId, canComment }: { projectId: string; ca
                                 <Avatar p={rp} size={6} />
                                 <span className="text-xs font-semibold">{rp?.full_name || rp?.email}</span>
                                 <span className="text-[10px] text-muted-foreground">
-                                  {formatDistanceToNow(new Date(r.created_at), { addSuffix: true })}
+                                  {formatTime(r.created_at, tz)}
                                 </span>
                               </div>
                               <p className="ml-7 mt-0.5 whitespace-pre-wrap break-words">{r.body}</p>
@@ -642,6 +752,7 @@ export function CommentsPanel({ projectId, canComment }: { projectId: string; ca
  * ============================================================ */
 export function ActivityPanel({ projectId }: { projectId: string }) {
   const qc = useQueryClient();
+  const tz = useUserTimezone();
   const { data: activity = [] } = useQuery({
     queryKey: ["project-activity", projectId],
     queryFn: async () => {
@@ -702,9 +813,7 @@ export function ActivityPanel({ projectId }: { projectId: string }) {
                       </>
                     )}
                   </div>
-                  <div className="text-[11px] text-muted-foreground">
-                    {formatDistanceToNow(new Date(a.created_at), { addSuffix: true })}
-                  </div>
+                  <div className="text-[11px] text-muted-foreground">{formatDateTime(a.created_at, tz)}</div>
                 </div>
               </li>
             );

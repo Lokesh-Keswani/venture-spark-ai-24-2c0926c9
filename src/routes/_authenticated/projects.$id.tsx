@@ -46,7 +46,7 @@ function ProjectDetail() {
   const [exporting, setExporting] = useState(false);
   const [tab, setTab] = useState<"analysis" | "chat" | "files" | "comments" | "activity">("analysis");
 
-  // Project role (owner, admin, editor, viewer) drives editor/viewer affordances.
+  // Project role (owner, admin, member) drives management/editing affordances.
   const { data: roleData } = useQuery({
     queryKey: ["project-role", id, user?.id],
     enabled: !!user,
@@ -55,13 +55,14 @@ function ProjectDetail() {
         _project_id: id,
         _user_id: user!.id,
       });
-      if (error) return "viewer";
-      return (data as string) ?? "viewer";
+      if (error) return "member";
+      return (data as string) ?? "member";
     },
   });
-  const role = (roleData ?? "viewer") as "owner" | "admin" | "editor" | "viewer";
-  const canEdit = role === "owner" || role === "admin" || role === "editor";
+  const role = (roleData ?? "member") as "owner" | "admin" | "member";
   const canManage = role === "owner" || role === "admin";
+  const canEdit = canManage; // Only Owner/Admin can modify project content
+  const isMember = role === "owner" || role === "admin" || role === "member";
 
   const { data, isLoading } = useQuery({
     queryKey: ["project", id],
@@ -245,7 +246,7 @@ function ProjectDetail() {
 
       {tab === "chat" && (
         <div className="mt-5">
-          <ChatPanel projectId={project.id} canSend={role !== "viewer"} />
+          <ChatPanel projectId={project.id} canSend={isMember} />
         </div>
       )}
       {tab === "files" && (
@@ -255,7 +256,7 @@ function ProjectDetail() {
       )}
       {tab === "comments" && (
         <div className="mt-5">
-          <CommentsPanel projectId={project.id} canComment={role !== "viewer"} />
+          <CommentsPanel projectId={project.id} canComment={isMember} />
         </div>
       )}
       {tab === "activity" && (
