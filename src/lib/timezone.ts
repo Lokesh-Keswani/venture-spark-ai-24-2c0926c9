@@ -63,8 +63,8 @@ export function formatDuration(seconds: number): string {
 
 export function listTimezones(): string[] {
   try {
-    // @ts-expect-error - supportedValuesOf is widely supported
-    const list = Intl.supportedValuesOf?.("timeZone") as string[] | undefined;
+    const list = (Intl as unknown as { supportedValuesOf?: (k: string) => string[] })
+      .supportedValuesOf?.("timeZone");
     if (list && list.length) return list;
   } catch {
     /* ignore */
