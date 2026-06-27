@@ -183,8 +183,9 @@ function ShareBody({ projectId, ownerId }: { projectId: string; ownerId: string 
             </Button>
           </div>
           <p className="mt-2 text-[11px] text-muted-foreground">
-            Invite link is copied to your clipboard. If email is configured, your teammate also receives a "Join project" email.
+            Invite link is copied to your clipboard. Tell the user to log in first, then open the invitation link to join the project.
           </p>
+
         </form>
       ) : (
         <p className="rounded-lg border border-dashed border-border p-3 text-xs text-muted-foreground">
