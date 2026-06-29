@@ -7,21 +7,18 @@ const ThemeContext = createContext<Ctx | null>(null);
 const STORAGE_KEY = "ventureiq-theme";
 
 export function ThemeProvider({ children }: { children: ReactNode }) {
-  const [theme, setThemeState] = useState<Theme>("light");
+  // Dark-first premium product
+  const [theme, setThemeState] = useState<Theme>("dark");
 
   useEffect(() => {
     const stored = (typeof window !== "undefined" && localStorage.getItem(STORAGE_KEY)) as Theme | null;
-    const initial: Theme =
-      stored ??
-      (typeof window !== "undefined" && window.matchMedia("(prefers-color-scheme: dark)").matches
-        ? "dark"
-        : "light");
-    setThemeState(initial);
+    setThemeState(stored ?? "dark");
   }, []);
 
   useEffect(() => {
     const root = document.documentElement;
     root.classList.toggle("dark", theme === "dark");
+    root.style.colorScheme = theme;
     localStorage.setItem(STORAGE_KEY, theme);
   }, [theme]);
 

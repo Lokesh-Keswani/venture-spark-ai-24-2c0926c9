@@ -1,5 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
+import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
 import { Button } from "@/components/ui/button";
@@ -11,6 +12,25 @@ import {
   TrendingUp,
 } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
+
+function useCountUp(target: number, durationMs = 900) {
+  const [value, setValue] = useState(0);
+  useEffect(() => {
+    if (!Number.isFinite(target)) return;
+    let raf = 0;
+    const start = performance.now();
+    const from = 0;
+    const tick = (now: number) => {
+      const t = Math.min(1, (now - start) / durationMs);
+      const eased = 1 - Math.pow(1 - t, 3);
+      setValue(Math.round(from + (target - from) * eased));
+      if (t < 1) raf = requestAnimationFrame(tick);
+    };
+    raf = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(raf);
+  }, [target, durationMs]);
+  return value;
+}
 
 export const Route = createFileRoute("/_authenticated/dashboard")({
   head: () => ({ meta: [{ title: "Dashboard — VentureIQ AI" }] }),
@@ -71,16 +91,19 @@ function Dashboard() {
           icon={FolderKanban}
           label="Total projects"
           value={isLoading ? "…" : projects.length.toString()}
+          numeric={isLoading ? null : projects.length}
         />
         <Stat
           icon={FileText}
           label="Total reports"
           value={isLoading ? "…" : reports.length.toString()}
+          numeric={isLoading ? null : reports.length}
         />
         <Stat
           icon={TrendingUp}
           label="Avg. score"
           value={isLoading ? "…" : avgScore === null ? "—" : `${avgScore}/100`}
+          numeric={isLoading || avgScore === null ? null : avgScore}
         />
         <Stat
           icon={Sparkles}
@@ -95,6 +118,15 @@ function Dashboard() {
                       7 * 24 * 3600 * 1000,
                   )
                   .length.toString()
+          }
+          numeric={
+            isLoading
+              ? null
+              : reports.filter(
+                  (r) =>
+                    Date.now() - new Date(r.created_at).getTime() <
+                    7 * 24 * 3600 * 1000,
+                ).length
           }
         />
       </div>
@@ -153,7 +185,7 @@ function Dashboard() {
                   <div key={r.id} className="grid min-w-0 grid-cols-[minmax(0,1fr)_2.25rem] items-center gap-3">
                     <div className="h-1.5 min-w-0 overflow-hidden rounded-full bg-muted">
                       <div
-                        className="h-full rounded-full bg-primary"
+                        className="h-full rounded-full bg-primary-gradient transition-[width] duration-700 ease-out"
                         style={{ width: `${r.score ?? 0}%` }}
                       />
                     </div>
@@ -188,7 +220,7 @@ function Dashboard() {
                   key={p.id}
                   to="/projects/$id"
                   params={{ id: p.id }}
-                  className="group min-w-0 overflow-hidden rounded-lg border border-border bg-background p-4 transition hover:border-primary/40 hover:shadow-soft"
+                  className="card-lift group min-w-0 overflow-hidden rounded-lg border border-border/70 bg-background/60 p-4 backdrop-blur-sm"
                 >
                   <div className="grid min-w-0 grid-cols-[minmax(0,1fr)_auto] items-start gap-2">
                     <h3 className="truncate font-medium">{p.startup_name}</h3>
@@ -211,18 +243,30 @@ function Stat({
   icon: Icon,
   label,
   value,
+  numeric,
 }: {
   icon: React.ComponentType<{ className?: string }>;
   label: string;
   value: string;
+  numeric?: number | null;
 }) {
+  const animated = useCountUp(numeric ?? 0);
+  const display = numeric != null ? animated.toString() : value;
   return (
-    <div className="w-full min-w-0 max-w-full overflow-hidden rounded-xl border border-border bg-card p-4 shadow-soft">
+    <div className="card-lift group relative w-full min-w-0 max-w-full overflow-hidden rounded-xl border border-border/80 bg-card p-4 shadow-soft">
+      <div
+        aria-hidden
+        className="pointer-events-none absolute inset-x-0 -top-px h-px bg-linear-to-r from-transparent via-primary/40 to-transparent opacity-0 transition-opacity duration-300 group-hover:opacity-100"
+      />
       <div className="flex min-w-0 items-center gap-2 text-muted-foreground">
-        <Icon className="h-4 w-4 shrink-0" />
-        <span className="truncate text-xs">{label}</span>
+        <span className="grid h-7 w-7 shrink-0 place-items-center rounded-md bg-primary/10 text-primary">
+          <Icon className="h-3.5 w-3.5" />
+        </span>
+        <span className="truncate text-xs uppercase tracking-wide">{label}</span>
       </div>
-      <div className="mt-2 truncate font-display text-2xl font-semibold tracking-tight">{value}</div>
+      <div className="mt-3 truncate font-display text-3xl font-semibold tracking-tight tabular-nums">
+        {display}
+      </div>
     </div>
   );
 }
