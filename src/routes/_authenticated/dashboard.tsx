@@ -91,16 +91,19 @@ function Dashboard() {
           icon={FolderKanban}
           label="Total projects"
           value={isLoading ? "…" : projects.length.toString()}
+          numeric={isLoading ? null : projects.length}
         />
         <Stat
           icon={FileText}
           label="Total reports"
           value={isLoading ? "…" : reports.length.toString()}
+          numeric={isLoading ? null : reports.length}
         />
         <Stat
           icon={TrendingUp}
           label="Avg. score"
           value={isLoading ? "…" : avgScore === null ? "—" : `${avgScore}/100`}
+          numeric={isLoading || avgScore === null ? null : avgScore}
         />
         <Stat
           icon={Sparkles}
@@ -115,6 +118,15 @@ function Dashboard() {
                       7 * 24 * 3600 * 1000,
                   )
                   .length.toString()
+          }
+          numeric={
+            isLoading
+              ? null
+              : reports.filter(
+                  (r) =>
+                    Date.now() - new Date(r.created_at).getTime() <
+                    7 * 24 * 3600 * 1000,
+                ).length
           }
         />
       </div>
