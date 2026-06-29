@@ -231,18 +231,30 @@ function Stat({
   icon: Icon,
   label,
   value,
+  numeric,
 }: {
   icon: React.ComponentType<{ className?: string }>;
   label: string;
   value: string;
+  numeric?: number | null;
 }) {
+  const animated = useCountUp(numeric ?? 0);
+  const display = numeric != null ? animated.toString() : value;
   return (
-    <div className="w-full min-w-0 max-w-full overflow-hidden rounded-xl border border-border bg-card p-4 shadow-soft">
+    <div className="card-lift group relative w-full min-w-0 max-w-full overflow-hidden rounded-xl border border-border/80 bg-card p-4 shadow-soft">
+      <div
+        aria-hidden
+        className="pointer-events-none absolute inset-x-0 -top-px h-px bg-linear-to-r from-transparent via-primary/40 to-transparent opacity-0 transition-opacity duration-300 group-hover:opacity-100"
+      />
       <div className="flex min-w-0 items-center gap-2 text-muted-foreground">
-        <Icon className="h-4 w-4 shrink-0" />
-        <span className="truncate text-xs">{label}</span>
+        <span className="grid h-7 w-7 shrink-0 place-items-center rounded-md bg-primary/10 text-primary">
+          <Icon className="h-3.5 w-3.5" />
+        </span>
+        <span className="truncate text-xs uppercase tracking-wide">{label}</span>
       </div>
-      <div className="mt-2 truncate font-display text-2xl font-semibold tracking-tight">{value}</div>
+      <div className="mt-3 truncate font-display text-3xl font-semibold tracking-tight tabular-nums">
+        {display}
+      </div>
     </div>
   );
 }
