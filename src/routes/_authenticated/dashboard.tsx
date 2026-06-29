@@ -185,7 +185,7 @@ function Dashboard() {
                   <div key={r.id} className="grid min-w-0 grid-cols-[minmax(0,1fr)_2.25rem] items-center gap-3">
                     <div className="h-1.5 min-w-0 overflow-hidden rounded-full bg-muted">
                       <div
-                        className="h-full rounded-full bg-primary"
+                        className="h-full rounded-full bg-primary-gradient transition-[width] duration-700 ease-out"
                         style={{ width: `${r.score ?? 0}%` }}
                       />
                     </div>
@@ -220,7 +220,7 @@ function Dashboard() {
                   key={p.id}
                   to="/projects/$id"
                   params={{ id: p.id }}
-                  className="group min-w-0 overflow-hidden rounded-lg border border-border bg-background p-4 transition hover:border-primary/40 hover:shadow-soft"
+                  className="card-lift group min-w-0 overflow-hidden rounded-lg border border-border/70 bg-background/60 p-4 backdrop-blur-sm"
                 >
                   <div className="grid min-w-0 grid-cols-[minmax(0,1fr)_auto] items-start gap-2">
                     <h3 className="truncate font-medium">{p.startup_name}</h3>
