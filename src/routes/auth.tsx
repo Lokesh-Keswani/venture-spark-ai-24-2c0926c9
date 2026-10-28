@@ -62,7 +62,7 @@ function GoogleButton() {
     setBusy(true);
     try {
       const result = await lovable.auth.signInWithOAuth("google", {
-        redirect_uri: window.location.origin + "/dashboard",
+        redirect_uri: window.location.origin,
       });
       if (result.error) {
         toast.error(result.error.message ?? "Google sign-in failed");
@@ -70,6 +70,7 @@ function GoogleButton() {
         return;
       }
       if (result.redirected) return;
+      // Session is already set at this point — safe to enter the app.
       window.location.href = "/dashboard";
     } catch (e) {
       toast.error(e instanceof Error ? e.message : "Google sign-in failed");
